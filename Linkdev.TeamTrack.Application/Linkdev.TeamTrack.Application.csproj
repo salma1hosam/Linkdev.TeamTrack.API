@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Linkdev.TeamTrack.Application.Contract\Linkdev.TeamTrack.Contract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MappingProfiles\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+</Project>
