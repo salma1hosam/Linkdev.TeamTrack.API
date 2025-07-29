@@ -5,5 +5,6 @@
         public TKey Id { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? LastUpdatedDate { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

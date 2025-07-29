@@ -9,7 +9,7 @@
         public int CompletedTaskPercent { get; set; }
 
         public string AssignedUserId { get; set; } //FK
-        public User AssignedUser { get; set; }
+        public TeamTrackUser AssignedUser { get; set; }
 
         public int ProjectId { get; set; } //FK
         public Project Project { get; set; }

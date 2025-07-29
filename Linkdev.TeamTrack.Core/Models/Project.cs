@@ -8,7 +8,7 @@ namespace Linkdev.TeamTrack.Core.Models
         public string? Description { get; set; }
         public ProjectStatus ProjectStatus { get; set; }
         public string ProjectManagerId { get; set; } //FK
-        public User ProjectManager { get; set; }
+        public TeamTrackUser ProjectManager { get; set; }
         public ICollection<Task> Tasks { get; set; } = [];
     }
 }
