@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Linkdev.TeamTrack.Core.Models
 {
@@ -6,7 +7,11 @@ namespace Linkdev.TeamTrack.Core.Models
     {
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public bool IsActive { get; set; } = true;
+
+        [InverseProperty(nameof(Project.ProjectManager))]
         public ICollection<Project>? Projects { get; set; } = [];
-        public ICollection<Task>? Tasks { get; set; } = [];
+
+        [InverseProperty(nameof(ProjectTask.AssignedUser))]
+        public ICollection<ProjectTask>? Tasks { get; set; } = [];
     }
 }

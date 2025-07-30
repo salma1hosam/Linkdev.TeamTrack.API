@@ -1,3 +1,5 @@
+using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace Linkdev.TeamTrack.API
 {
@@ -7,16 +9,22 @@ namespace Linkdev.TeamTrack.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
+            #region Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            //DbContext Registeration
+            builder.Services.AddDbContext<TeamTrackDbContext>(option =>
+            {
+                option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+            #endregion
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            #region Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -27,8 +35,8 @@ namespace Linkdev.TeamTrack.API
 
             app.UseAuthorization();
 
-
-            app.MapControllers();
+            app.MapControllers(); 
+            #endregion
 
             app.Run();
         }
