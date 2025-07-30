@@ -1,11 +1,15 @@
+using Linkdev.TeamTrack.Contract.Repository.Interfaces;
+using Linkdev.TeamTrack.Core.Models;
+using Linkdev.TeamTrack.Infrastructure.Data;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Linkdev.TeamTrack.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +24,19 @@ namespace Linkdev.TeamTrack.API
             {
                 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            //Identity Services Registeration
+            builder.Services.AddIdentity<TeamTrackUser , IdentityRole>()
+                            .AddEntityFrameworkStores<TeamTrackDbContext>();
+
+            builder.Services.AddScoped<IDataSeeding, DataSeeding>();
             #endregion
 
             var app = builder.Build();
+
+            using var scope = app.Services.CreateScope();
+            var objFromDataSeeding = scope.ServiceProvider.GetService<IDataSeeding>();
+            await objFromDataSeeding.RoleSeedingAsync();
 
             #region Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
