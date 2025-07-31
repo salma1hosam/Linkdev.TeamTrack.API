@@ -1,4 +1,4 @@
-﻿using Linkdev.TeamTrack.Contract.DTOs.AuthDtos;
+﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
 using Linkdev.TeamTrack.Contract.Responses;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
@@ -14,8 +14,62 @@ namespace Linkdev.TeamTrack.Application.Services
 {
     public class UserService(UserManager<TeamTrackUser> _userManager,
                             SignInManager<TeamTrackUser> _signInManager,
+                            RoleManager<IdentityRole> _roleManager,
                             IConfiguration _configuration) : IUserService
     {
+        public async Task<GenericResponse<UserRoleDto>> AssignOrUpdateUserRoleAsync(SetUserRoleDto setUserRoleDto)
+        {
+            var genericResponse = new GenericResponse<UserRoleDto>();
+            var user = await _userManager.FindByIdAsync(setUserRoleDto.UserId);
+            if (user is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "User is Not Found";
+                return genericResponse;
+            }
+
+            if (!await _roleManager.RoleExistsAsync(setUserRoleDto.Role))
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "Role does Not Exist";
+                return genericResponse;
+            }
+
+            //In Update Case
+            var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            if (currentRole is not null)
+            {
+                var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
+                if (!removeResult.Succeeded)
+                {
+                    genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                    genericResponse.Message = "Failed to Remove the user's old Role";
+                    return genericResponse;
+                }
+            }
+
+            //In Assign Case
+            var result = await _userManager.AddToRoleAsync(user, setUserRoleDto.Role);
+            if (!result.Succeeded)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "Failed to assign user role";
+                return genericResponse;
+            }
+
+            var userRoleDto = new UserRoleDto()
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Role Assigned Successfully";
+            genericResponse.Data = userRoleDto;
+            return genericResponse;
+        }
+
         public async Task<GenericResponse<UserDto>> LoginAsync(LoginDto loginDto)
         {
             var genericResponse = new GenericResponse<UserDto>();
@@ -66,7 +120,7 @@ namespace Linkdev.TeamTrack.Application.Services
             if (existingUser is not null)
             {
                 genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Email already exisits";
+                genericResponse.Message = "Email already exists";
                 return genericResponse;
             }
 

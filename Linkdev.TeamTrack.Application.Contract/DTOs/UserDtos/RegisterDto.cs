@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Linkdev.TeamTrack.Contract.DTOs.AuthDtos
+namespace Linkdev.TeamTrack.Contract.DTOs.UserDtos
 {
     public class RegisterDto
     {

@@ -1,5 +1,6 @@
-﻿using Linkdev.TeamTrack.Contract.DTOs.AuthDtos;
+﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,14 +11,14 @@ namespace Linkdev.TeamTrack.API.Controllers
     public class UserController(IUserService _userService) : ControllerBase
     {
         [HttpPost("Register")]
-        public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
+        public async Task<ActionResult> Register(RegisterDto registerDto)
         {
             var result = await _userService.RegisterAsync(registerDto);
             return Ok(result);
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
+        public async Task<ActionResult> Login(LoginDto loginDto)
         {
             var result = await _userService.LoginAsync(loginDto);
             return Ok(result);
@@ -28,6 +29,14 @@ namespace Linkdev.TeamTrack.API.Controllers
         {
             await _userService.LogOutAsync();
             return Ok();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("AssignOrUpdateUserRole")]
+        public async Task<ActionResult> AssignOrUpdateUserRole(SetUserRoleDto setUserRoleDto)
+        {
+            var result = await _userService.AssignOrUpdateUserRoleAsync(setUserRoleDto);
+            return Ok(result);
         }
     }
 }
