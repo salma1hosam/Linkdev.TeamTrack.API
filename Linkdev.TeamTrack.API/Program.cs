@@ -54,7 +54,7 @@ namespace Linkdev.TeamTrack.API
             });
 
             builder.Services.AddScoped<IDataSeeding, DataSeeding>();
-            builder.Services.AddScoped<IAuthenticationService , AuthenticationService>();
+            builder.Services.AddScoped<IUserService , UserService>();
             #endregion
 
             var app = builder.Build();

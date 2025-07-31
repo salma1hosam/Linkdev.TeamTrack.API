@@ -12,9 +12,9 @@ using System.Text;
 
 namespace Linkdev.TeamTrack.Application.Services
 {
-    public class AuthenticationService(UserManager<TeamTrackUser> _userManager,
-                                       SignInManager<TeamTrackUser> _signInManager,
-                                       IConfiguration _configuration) : IAuthenticationService
+    public class UserService(UserManager<TeamTrackUser> _userManager,
+                            SignInManager<TeamTrackUser> _signInManager,
+                            IConfiguration _configuration) : IUserService
     {
         public async Task<GenericResponse<UserDto>> LoginAsync(LoginDto loginDto)
         {
