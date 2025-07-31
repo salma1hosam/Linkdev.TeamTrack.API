@@ -12,7 +12,10 @@
 
   <ItemGroup>
     <Folder Include="MappingProfiles\" />
-    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
   </ItemGroup>
 
 </Project>

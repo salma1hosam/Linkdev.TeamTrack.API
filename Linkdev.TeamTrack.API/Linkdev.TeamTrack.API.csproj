@@ -15,13 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Linkdev.TeamTrack.Application.Contract\Linkdev.TeamTrack.Contract.csproj" />
     <ProjectReference Include="..\Linkdev.TeamTrack.Application\Linkdev.TeamTrack.Application.csproj" />
-    <ProjectReference Include="..\Linkdev.TeamTrack.Core\Linkdev.TeamTrack.Core.csproj" />
     <ProjectReference Include="..\Linkdev.TeamTrack.Infrastructure\Linkdev.TeamTrack.Infrastructure.csproj" />
   </ItemGroup>
 
