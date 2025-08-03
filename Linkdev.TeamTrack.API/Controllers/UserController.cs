@@ -33,10 +33,18 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("AssignOrUpdateUserRole")]
-        public async Task<ActionResult<GenericResponse<UserRoleDto>>> AssignOrUpdateUserRole(SetUserRoleDto setUserRoleDto)
+        [HttpPost("AssignUserRole")]
+        public async Task<ActionResult<GenericResponse<UserRoleDto>>> AssignUserRole(SetUserRoleDto setUserRoleDto)
         {
-            var result = await _userService.AssignOrUpdateUserRoleAsync(setUserRoleDto);
+            var result = await _userService.AssignUserRoleAsync(setUserRoleDto);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("UpdateUserRole")]
+        public async Task<ActionResult<GenericResponse<UserRoleDto>>> UpdateUserRole(SetUserRoleDto setUserRoleDto)
+        {
+            var result = await _userService.UpdateUserRoleAsync(setUserRoleDto);
             return Ok(result);
         }
 

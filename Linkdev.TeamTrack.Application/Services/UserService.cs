@@ -103,11 +103,60 @@ namespace Linkdev.TeamTrack.Application.Services
             };
         }
 
-        public async Task<GenericResponse<UserRoleDto>> AssignOrUpdateUserRoleAsync(SetUserRoleDto setUserRoleDto)
+        public async Task<GenericResponse<UserRoleDto>> AssignUserRoleAsync(SetUserRoleDto setUserRoleDto)
         {
             var genericResponse = new GenericResponse<UserRoleDto>();
             var user = await _userManager.FindByIdAsync(setUserRoleDto.UserId);
             if (user is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "User is Not Found";
+                return genericResponse;
+            }
+
+            var currentRole = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
+            if (currentRole is not null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "This User has already been assigned to role";
+                return genericResponse;
+            }
+
+            if (!await _roleManager.RoleExistsAsync(setUserRoleDto.Role))
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "Role does Not Exist";
+                return genericResponse;
+            }
+
+
+            var result = await _userManager.AddToRoleAsync(user, setUserRoleDto.Role);
+            if (!result.Succeeded)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "Failed to assign user role";
+                return genericResponse;
+            }
+
+            var userRoleDto = new UserRoleDto()
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Role = _userManager.GetRolesAsync(user).Result.FirstOrDefault() ?? "Unassigned"
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Role Assigned Successfully";
+            genericResponse.Data = userRoleDto;
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<UserRoleDto>> UpdateUserRoleAsync(SetUserRoleDto setUserRoleDto)
+        {
+            var genericResponse = new GenericResponse<UserRoleDto>();
+
+            var user = await _userManager.FindByIdAsync(setUserRoleDto.UserId);
+            if(user is null)
             {
                 genericResponse.StatusCode = StatusCodes.Status404NotFound;
                 genericResponse.Message = "User is Not Found";
@@ -121,8 +170,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 return genericResponse;
             }
 
-            //In Update Case
-            var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            var currentRole = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
             if (currentRole is not null)
             {
                 var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
@@ -146,15 +194,15 @@ namespace Linkdev.TeamTrack.Application.Services
             {
                 UserId = user.Id,
                 Email = user.Email,
-                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "Unassigned"
+                Role = _userManager.GetRolesAsync(user).Result.FirstOrDefault() ?? "Unassigned"
             };
 
             genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Role Assigned Successfully";
+            genericResponse.Message = "Role Updated Successfully";
             genericResponse.Data = userRoleDto;
             return genericResponse;
         }
-
+        
         public async Task<GenericResponse<PaginatedResponse<GetAllUsersDto>>> GetAllUsersAsync(UserQueryParams userQueryParams)
         {
             var genericResponse = new GenericResponse<PaginatedResponse<GetAllUsersDto>>();
@@ -229,5 +277,6 @@ namespace Linkdev.TeamTrack.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }
