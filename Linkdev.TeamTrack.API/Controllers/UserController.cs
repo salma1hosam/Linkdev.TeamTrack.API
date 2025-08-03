@@ -1,4 +1,5 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
+using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,21 +12,21 @@ namespace Linkdev.TeamTrack.API.Controllers
     public class UserController(IUserService _userService) : ControllerBase
     {
         [HttpPost("Register")]
-        public async Task<ActionResult> Register(RegisterDto registerDto)
+        public async Task<ActionResult<GenericResponse<UserDto>>> Register(RegisterDto registerDto)
         {
             var result = await _userService.RegisterAsync(registerDto);
             return Ok(result);
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult> Login(LoginDto loginDto)
+        public async Task<ActionResult<GenericResponse<UserDto>>> Login(LoginDto loginDto)
         {
             var result = await _userService.LoginAsync(loginDto);
             return Ok(result);
         }
 
         [HttpPost("LogOut")]
-        public async Task<ActionResult> LogOut()
+        public async Task<ActionResult<GenericResponse<bool>>> LogOut()
         {
             await _userService.LogOutAsync();
             return Ok();
@@ -33,9 +34,17 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("AssignOrUpdateUserRole")]
-        public async Task<ActionResult> AssignOrUpdateUserRole(SetUserRoleDto setUserRoleDto)
+        public async Task<ActionResult<GenericResponse<UserRoleDto>>> AssignOrUpdateUserRole(SetUserRoleDto setUserRoleDto)
         {
             var result = await _userService.AssignOrUpdateUserRoleAsync(setUserRoleDto);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllUsers")]
+        public async Task<ActionResult<GenericResponse<PaginatedResponse<GetAllUsersDto>>>> GetAllUsers([FromQuery] UserQueryParams userQueryParams)
+        {
+            var result = await _userService.GetAllUsersAsync(userQueryParams);
             return Ok(result);
         }
     }

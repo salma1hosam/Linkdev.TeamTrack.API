@@ -1,4 +1,4 @@
-﻿namespace Linkdev.TeamTrack.Contract.Responses
+﻿namespace Linkdev.TeamTrack.Core.Responses
 {
     public class GenericResponse<T>
     {

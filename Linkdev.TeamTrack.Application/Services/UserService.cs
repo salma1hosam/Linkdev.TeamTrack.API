@@ -1,9 +1,10 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
-using Linkdev.TeamTrack.Contract.Responses;
+using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,102 +18,6 @@ namespace Linkdev.TeamTrack.Application.Services
                             RoleManager<IdentityRole> _roleManager,
                             IConfiguration _configuration) : IUserService
     {
-        public async Task<GenericResponse<UserRoleDto>> AssignOrUpdateUserRoleAsync(SetUserRoleDto setUserRoleDto)
-        {
-            var genericResponse = new GenericResponse<UserRoleDto>();
-            var user = await _userManager.FindByIdAsync(setUserRoleDto.UserId);
-            if (user is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "User is Not Found";
-                return genericResponse;
-            }
-
-            if (!await _roleManager.RoleExistsAsync(setUserRoleDto.Role))
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "Role does Not Exist";
-                return genericResponse;
-            }
-
-            //In Update Case
-            var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-            if (currentRole is not null)
-            {
-                var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
-                if (!removeResult.Succeeded)
-                {
-                    genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                    genericResponse.Message = "Failed to Remove the user's old Role";
-                    return genericResponse;
-                }
-            }
-
-            //In Assign Case
-            var result = await _userManager.AddToRoleAsync(user, setUserRoleDto.Role);
-            if (!result.Succeeded)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Failed to assign user role";
-                return genericResponse;
-            }
-
-            var userRoleDto = new UserRoleDto()
-            {
-                UserId = user.Id,
-                Email = user.Email,
-                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
-            };
-
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Role Assigned Successfully";
-            genericResponse.Data = userRoleDto;
-            return genericResponse;
-        }
-
-        public async Task<GenericResponse<UserDto>> LoginAsync(LoginDto loginDto)
-        {
-            var genericResponse = new GenericResponse<UserDto>();
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
-            if (user is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "User is Not Found";
-                return genericResponse;
-            }
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-            if (!result.Succeeded)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Invalid email or password. Please check your details and try again.";
-                return genericResponse;
-            }
-            var userDto = new UserDto()
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                CreatedDate = user.CreatedDate,
-                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault(),
-                Token = await CreateTokenAsync(user)
-            };
-
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "User Loged-in Successfully";
-            genericResponse.Data = userDto;
-            return genericResponse;
-        }
-
-        public async Task<GenericResponse<bool>> LogOutAsync()
-        {
-            await _signInManager.SignOutAsync();
-            return new GenericResponse<bool>()
-            {
-                StatusCode = StatusCodes.Status200OK,
-                Message = "User Loged-out successfully",
-                Data = true
-            };
-        }
-
         public async Task<GenericResponse<UserDto>> RegisterAsync(RegisterDto registerDto)
         {
             var genericResponse = new GenericResponse<UserDto>();
@@ -144,7 +49,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 UserName = user.UserName,
                 Email = user.Email,
                 CreatedDate = user.CreatedDate,
-                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault(),
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "Unassigned",
                 Token = await CreateTokenAsync(user)
             };
 
@@ -153,6 +58,150 @@ namespace Linkdev.TeamTrack.Application.Services
             genericResponse.Data = userDto;
             return genericResponse;
 
+        }
+
+        public async Task<GenericResponse<UserDto>> LoginAsync(LoginDto loginDto)
+        {
+            var genericResponse = new GenericResponse<UserDto>();
+            var user = await _userManager.FindByEmailAsync(loginDto.Email);
+            if (user is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "User is Not Found";
+                return genericResponse;
+            }
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+            if (!result.Succeeded)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "Invalid email or password. Please check your details and try again.";
+                return genericResponse;
+            }
+            var userDto = new UserDto()
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                CreatedDate = user.CreatedDate,
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "Unassigned",
+                Token = await CreateTokenAsync(user)
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "User Loged-in Successfully";
+            genericResponse.Data = userDto;
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<bool>> LogOutAsync()
+        {
+            await _signInManager.SignOutAsync();
+            return new GenericResponse<bool>()
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "User Loged-out successfully",
+                Data = true
+            };
+        }
+
+        public async Task<GenericResponse<UserRoleDto>> AssignOrUpdateUserRoleAsync(SetUserRoleDto setUserRoleDto)
+        {
+            var genericResponse = new GenericResponse<UserRoleDto>();
+            var user = await _userManager.FindByIdAsync(setUserRoleDto.UserId);
+            if (user is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "User is Not Found";
+                return genericResponse;
+            }
+
+            if (!await _roleManager.RoleExistsAsync(setUserRoleDto.Role))
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "Role does Not Exist";
+                return genericResponse;
+            }
+
+            //In Update Case
+            var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            if (currentRole is not null)
+            {
+                var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
+                if (!removeResult.Succeeded)
+                {
+                    genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                    genericResponse.Message = "Failed to Remove the user's old Role";
+                    return genericResponse;
+                }
+            }
+
+            var result = await _userManager.AddToRoleAsync(user, setUserRoleDto.Role);
+            if (!result.Succeeded)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "Failed to assign user role";
+                return genericResponse;
+            }
+
+            var userRoleDto = new UserRoleDto()
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "Unassigned"
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Role Assigned Successfully";
+            genericResponse.Data = userRoleDto;
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<PaginatedResponse<GetAllUsersDto>>> GetAllUsersAsync(UserQueryParams userQueryParams)
+        {
+            var genericResponse = new GenericResponse<PaginatedResponse<GetAllUsersDto>>();
+
+            var allUsers = await _userManager.Users
+                          .Where(U => (userQueryParams.UserName.IsNullOrEmpty() || U.UserName.Contains(userQueryParams.UserName))
+                                      && (!userQueryParams.CreatedDateFrom.HasValue || U.CreatedDate >= userQueryParams.CreatedDateFrom)
+                                      && (!userQueryParams.CreatedDateTo.HasValue || U.CreatedDate <= userQueryParams.CreatedDateTo)
+                                      && (!(userQueryParams.CreatedDateFrom.HasValue && userQueryParams.CreatedDateTo.HasValue) ||
+                                           (U.CreatedDate >= userQueryParams.CreatedDateFrom && U.CreatedDate <= userQueryParams.CreatedDateTo)))
+                          .OrderByDescending(U => U.CreatedDate)
+                          .ToListAsync();
+
+            if (!allUsers.Any())
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "There is no data to be displayed";
+                return genericResponse;
+            }
+
+            var allUsersDto = new List<GetAllUsersDto>();
+            foreach (var user in allUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                allUsersDto.Add(new GetAllUsersDto()
+                {
+                    UserName = user.UserName,
+                    CreatedDate = user.CreatedDate,
+                    Email = user.Email,
+                    Role = roles.FirstOrDefault() ?? "Unassigned"
+                });
+            }
+
+            var paginatedResult = new PaginatedResponse<GetAllUsersDto>()
+            {
+                TotalCount = allUsersDto.Count,
+                PageNumber = userQueryParams.PageNumber,
+                PageSize = userQueryParams.PageSize,
+                Data = allUsersDto.Skip((userQueryParams.PageNumber - 1) * userQueryParams.PageSize)
+                                  .Take(userQueryParams.PageSize)
+                                  .ToList()
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Users retreived successfully";
+            genericResponse.Data = paginatedResult;
+            return genericResponse;
         }
 
         private async Task<string> CreateTokenAsync(TeamTrackUser user)
