@@ -7,7 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.18">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Linkdev.TeamTrack.Application\Linkdev.TeamTrack.Application.csproj" />
+    <ProjectReference Include="..\Linkdev.TeamTrack.Infrastructure\Linkdev.TeamTrack.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
