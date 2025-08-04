@@ -4,6 +4,7 @@ using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Infrastructure.Data;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
+using Linkdev.TeamTrack.Infrastructure.UOW;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,7 @@ namespace Linkdev.TeamTrack.API
 
             builder.Services.AddScoped<IDataSeeding, DataSeeding>();
             builder.Services.AddScoped<IUserService , UserService>();
+            builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
             #endregion
 
             var app = builder.Build();
