@@ -1,3 +1,4 @@
+using Linkdev.TeamTrack.Application.MappingProfiles;
 using Linkdev.TeamTrack.Application.Services;
 using Linkdev.TeamTrack.Contract.Repository.Interfaces;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
@@ -57,6 +58,8 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddScoped<IDataSeeding, DataSeeding>();
             builder.Services.AddScoped<IUserService , UserService>();
             builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
+            builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+            builder.Services.AddScoped<IProjectService , ProjectService>();
             #endregion
 
             var app = builder.Build();
