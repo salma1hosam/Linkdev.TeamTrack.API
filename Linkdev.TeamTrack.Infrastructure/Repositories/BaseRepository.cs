@@ -14,7 +14,9 @@ namespace Linkdev.TeamTrack.Infrastructure.Repositories
 
         public void Update(TEntity entity) => _dbContext.Set<TEntity>().Update(entity);
 
-        public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[] includes)
+        public async Task<TEntity?> GetByIdAsync(TKey id) => await _dbContext.Set<TEntity>().FindAsync(id);
+        
+        public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[]? includes)
         {
             var items = _dbContext.Set<TEntity>().Where(predicate);
             if (includes.Any())
@@ -23,5 +25,6 @@ namespace Linkdev.TeamTrack.Infrastructure.Repositories
 
             return items;
         }
+
     }
 }

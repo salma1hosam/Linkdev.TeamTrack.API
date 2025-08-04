@@ -10,7 +10,10 @@ namespace Linkdev.TeamTrack.Application.MappingProfiles
         {
             CreateMap<CreateProjectDto, Project>();
             CreateMap<Project , ProjectDto>()
-                .ForMember(dto => dto.ProjectManager , option => option.MapFrom(src => src.ProjectManager.UserName));
+                .ForMember(dto => dto.ProjectManagerName , option => option.MapFrom(src => src.ProjectManager.UserName));
+            CreateMap<UpdateProjectStatus, Project>();
+            CreateMap<Project, ProjectStatusDto>()
+                .ForMember(dto => dto.ProjectManagerName, option => option.MapFrom(src => src.ProjectManager.UserName));
         }
     }
 }

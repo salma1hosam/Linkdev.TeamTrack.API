@@ -6,6 +6,7 @@ using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Linkdev.TeamTrack.Application.Services
 {
@@ -53,6 +54,54 @@ namespace Linkdev.TeamTrack.Application.Services
             genericReponse.StatusCode = StatusCodes.Status201Created;
             genericReponse.Message = "Project Created Successfully";
             genericReponse.Data = mappedProject;
+            return genericReponse;
+        }
+
+        public async Task<GenericResponse<ProjectStatusDto>> UpdateProjectStatusAsync(string userId , UpdateProjectStatus updateProjectStatus)
+        {
+            var genericReponse = new GenericResponse<ProjectStatusDto>();
+
+            if(updateProjectStatus is null)
+            {
+                genericReponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericReponse.Message = "Enter a Valid Data";
+                return genericReponse;
+            }
+
+            if(userId is null)
+            {
+                genericReponse.StatusCode = StatusCodes.Status404NotFound;
+                genericReponse.Message = "User Id is Not Found";
+                return genericReponse;
+            }
+
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == updateProjectStatus.Id &&
+                                                                   P.IsActive == true &&
+                                                                   P.ProjectManagerId == userId ,
+                                                                   nameof(Project.ProjectManager)).FirstOrDefaultAsync();
+
+            if(project is null)
+            {
+                genericReponse.StatusCode = StatusCodes.Status404NotFound;
+                genericReponse.Message = "Project is Not Found";
+                return genericReponse;
+            }
+
+            _mapper.Map(updateProjectStatus, project);
+            project.LastUpdatedDate = DateTime.Now;
+
+            _unitOfWork.ProjectRepository.Update(project);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if(rows < 0)
+            {
+                genericReponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericReponse.Message = "Failed to Update the Project Status";
+                return genericReponse;
+            }
+
+            genericReponse.StatusCode = StatusCodes.Status200OK;
+            genericReponse.Message = "Project Status Updated Successfully";
+            genericReponse.Data = _mapper.Map<Project , ProjectStatusDto>(project);
             return genericReponse;
         }
     }
