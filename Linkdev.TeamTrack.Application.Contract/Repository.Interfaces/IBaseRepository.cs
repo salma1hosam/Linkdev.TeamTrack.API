@@ -1,4 +1,6 @@
-﻿using Linkdev.TeamTrack.Core.Models;
+﻿using Linkdev.TeamTrack.Contract.DTOs;
+using Linkdev.TeamTrack.Core.Models;
+using Linkdev.TeamTrack.Core.Responses;
 using System.Linq.Expressions;
 
 namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
@@ -10,5 +12,9 @@ namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
         void Remove(TEntity entity);
         Task<TEntity?> GetByIdAsync(TKey id);
         IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[]? includes);
+        Task<PaginatedResponse<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate,
+                                                   Paging paging,
+                                                   Expression<Func<TEntity, object>>? orderByKeySelector = null,
+                                                   params string[]? includes);
     }
 }

@@ -1,5 +1,8 @@
-﻿using Linkdev.TeamTrack.Contract.Repository.Interfaces;
+﻿using Linkdev.TeamTrack.Contract.DTOs;
+using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
+using Linkdev.TeamTrack.Contract.Repository.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
+using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -19,12 +22,39 @@ namespace Linkdev.TeamTrack.Infrastructure.Repositories
         public IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[]? includes)
         {
             var items = _dbContext.Set<TEntity>().Where(predicate);
-            if (includes.Any())
+            if (includes?.Any() == true)
                 foreach (var include in includes)
                     items = items.Include(include);
 
             return items;
         }
 
+        public async Task<PaginatedResponse<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, 
+                                                                Paging paging, 
+                                                                Expression<Func<TEntity, object>>? orderByKeySelector = null, 
+                                                                params string[]? includes)
+        {
+            var query = _dbContext.Set<TEntity>().Where(predicate)
+                                                 .OrderByDescending(orderByKeySelector)
+                                                 .AsQueryable();
+
+            if(includes?.Any() == true)
+                foreach(var include in includes)
+                    query = query.Include(include);
+
+            int totalCount = await query.CountAsync();
+
+            var items = await query.Skip((paging.PageNumber - 1) * paging.PageSize)
+                                   .Take(paging.PageSize)
+                                   .ToListAsync();
+
+            return new PaginatedResponse<TEntity>()
+            {
+                TotalCount = totalCount,
+                PageNumber = paging.PageNumber,
+                PageSize = paging.PageSize,
+                Data = items                                                       
+            };
+        }
     }
 }

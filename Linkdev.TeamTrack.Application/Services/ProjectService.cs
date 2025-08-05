@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.Repository.Interfaces;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Linkdev.TeamTrack.Core.Enums;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using Microsoft.AspNetCore.Http;
@@ -165,6 +167,60 @@ namespace Linkdev.TeamTrack.Application.Services
             }
             genericResponse.StatusCode = StatusCodes.Status400BadRequest;
             genericResponse.Message = "Failed to Update the Project Status";
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<PaginatedResponse<GetAllProjectsDto>>> ViewAllProjectsAsync(string userId, ProjectQueryParams projectQueryParams)
+        {
+            var genericResponse = new GenericResponse<PaginatedResponse<GetAllProjectsDto>>();
+
+            if (userId.IsNullOrEmpty())
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "User Id is Invalid";
+                return genericResponse;
+            }
+
+            var taskProjectIdList = await _unitOfWork.TaskRepository.Find(T => T.AssignedUserId == userId && T.IsActive == true)
+                                                                        .Select(T => T.ProjectId)
+                                                                        .ToListAsync();
+
+            var allprojectsPaginated = await _unitOfWork.ProjectRepository
+                                      .FindAsync(P => (P.ProjectManagerId.Equals(userId) || taskProjectIdList.Contains(P.Id))
+                                                          && P.IsActive == true
+                                                          && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
+                                                          && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
+                                                 , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
+                                                 , P => P.CreatedDate
+                                                 , nameof(Project.ProjectManager)
+                                                 );
+
+            if (allprojectsPaginated.Data?.Any() == false)
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "There is no data to be displayed";
+                return genericResponse;
+            }
+
+            var mappedProjects = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
+            {
+                Name = P.Name,
+                CreatedDate = P.CreatedDate,
+                ProjectManagerName = P.ProjectManager.UserName,
+                ProjectStatus = P.ProjectStatus.ToString()
+            }).ToList();
+
+            var paginatedResult = new PaginatedResponse<GetAllProjectsDto>()
+            {
+                TotalCount = allprojectsPaginated.TotalCount,
+                PageNumber = allprojectsPaginated.PageNumber,
+                PageSize = allprojectsPaginated.PageSize,
+                Data = mappedProjects
+            };
+
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "All Projects retreived successfully";
+            genericResponse.Data = paginatedResult;
             return genericResponse;
         }
     }

@@ -38,5 +38,14 @@ namespace Linkdev.TeamTrack.API.Controllers
             var result = await _projectService.UpdateProjectDetailsAsync(userId , updateProjectDetailsDto);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Project Manager,Team Member")]
+        [HttpGet("ViewAllProjects")]
+        public async Task<ActionResult<GenericResponse<PaginatedResponse<GetAllProjectsDto>>>> ViewAllProjects([FromQuery] ProjectQueryParams projectQueryParams)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _projectService.ViewAllProjectsAsync(userId , projectQueryParams);
+            return Ok(result);
+        }
     }
 }
