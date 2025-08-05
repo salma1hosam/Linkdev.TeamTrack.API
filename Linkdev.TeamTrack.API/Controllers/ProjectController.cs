@@ -23,10 +23,19 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Project Manager")]
         [HttpPut("UpdateProjectStatus")]
-        public async Task<ActionResult<GenericResponse<ProjectDto>>> UpdateProjectStatus(UpdateProjectStatus updateProjectStatus)
+        public async Task<ActionResult<GenericResponse<ProjectDto>>> UpdateProjectStatus(UpdateProjectStatusDto updateProjectStatus)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _projectService.UpdateProjectStatusAsync(userId , updateProjectStatus);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin,Project Manager")]
+        [HttpPut("UpdateProjectDetails")]
+        public async Task<ActionResult<GenericResponse<ReturnedProjectUpdateDto>>> UpdateProjectDetails(UpdateProjectDetailsDto updateProjectDetailsDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _projectService.UpdateProjectDetailsAsync(userId , updateProjectDetailsDto);
             return Ok(result);
         }
     }

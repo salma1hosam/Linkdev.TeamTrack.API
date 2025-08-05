@@ -2,7 +2,7 @@
 
 namespace Linkdev.TeamTrack.Contract.DTOs.ProjectDtos
 {
-    public class UpdateProjectStatus
+    public class UpdateProjectStatusDto
     {
         public int Id { get; set; }
         
