@@ -52,8 +52,68 @@ namespace Linkdev.TeamTrack.Application.Services
                 genericResponse.Data = _mapper.Map<Project, ProjectDto>(project);
                 return genericResponse;
             }
-            genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+            genericResponse.StatusCode = StatusCodes.Status200OK;
             genericResponse.Message = "Failed to Create the Project";
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<ReturnedProjectUpdateDto>> AssignProjectManagerAsync(SetProjectManagerDto setProjectManagerDto)
+        {
+            var genericResponse = new GenericResponse<ReturnedProjectUpdateDto>();
+
+            if (setProjectManagerDto is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "Enter a Valid Data";
+                return genericResponse;
+            }
+
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == setProjectManagerDto.Id && P.IsActive == true)
+                                                             .FirstOrDefaultAsync();
+            if (project is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "Project is Not Found";
+                return genericResponse;
+            }
+
+            if (project.ProjectManagerId == setProjectManagerDto.ProjectManagerId)
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "This Project Manager is already assigned to this project";
+                return genericResponse;
+            }
+
+            var user = await _userManager.FindByIdAsync(setProjectManagerDto.ProjectManagerId);
+            if (user is null)
+            {
+                genericResponse.StatusCode = StatusCodes.Status404NotFound;
+                genericResponse.Message = "This Project Manager is Not Found";
+                return genericResponse;
+            }
+
+            var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
+            if (role.IsNullOrEmpty() || !role.Contains("Project Manager"))
+            {
+                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+                genericResponse.Message = "The selected user is not in Project Manager Role";
+                return genericResponse;
+            }
+
+            _mapper.Map(setProjectManagerDto, project);
+            project.LastUpdatedDate = DateTime.Now;
+
+            _unitOfWork.ProjectRepository.Update(project);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows > 0)
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "Project Manager Assigned Successfully";
+                genericResponse.Data = _mapper.Map<Project, ReturnedProjectUpdateDto>(project);
+                return genericResponse;
+            }
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Failed to Assign Project Manager to this Project";
             return genericResponse;
         }
 
@@ -116,7 +176,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 return genericResponse;
             }
 
-            genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+            genericResponse.StatusCode = StatusCodes.Status200OK;
             genericResponse.Message = "Failed to Update the Project";
             return genericResponse;
 
@@ -165,7 +225,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 genericResponse.Data = _mapper.Map<Project, ProjectStatusDto>(project);
                 return genericResponse;
             }
-            genericResponse.StatusCode = StatusCodes.Status400BadRequest;
+            genericResponse.StatusCode = StatusCodes.Status200OK;
             genericResponse.Message = "Failed to Update the Project Status";
             return genericResponse;
         }
@@ -182,8 +242,8 @@ namespace Linkdev.TeamTrack.Application.Services
             }
 
             var taskProjectIdList = await _unitOfWork.TaskRepository.Find(T => T.AssignedUserId == userId && T.IsActive == true)
-                                                                        .Select(T => T.ProjectId)
-                                                                        .ToListAsync();
+                                                                    .Select(T => T.ProjectId)
+                                                                    .ToListAsync();
 
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
                                       .FindAsync(P => (P.ProjectManagerId.Equals(userId) || taskProjectIdList.Contains(P.Id))

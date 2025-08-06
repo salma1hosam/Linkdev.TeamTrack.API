@@ -47,5 +47,13 @@ namespace Linkdev.TeamTrack.API.Controllers
             var result = await _projectService.ViewAllProjectsAsync(userId , projectQueryParams);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("AssignProjectManager")]
+        public async Task<ActionResult<GenericResponse<ReturnedProjectUpdateDto>>> AssignProjectManager(SetProjectManagerDto setProjectManagerDto)
+        {
+            var result = await _projectService.AssignProjectManagerAsync(setProjectManagerDto);
+            return Ok(result);
+        }
     }
 }
