@@ -146,6 +146,13 @@ namespace Linkdev.TeamTrack.Application.Services
                 return genericResponse;
             }
 
+            if (project.ProjectStatus == ProjectStatus.Suspended)
+            {
+                genericResponse.StatusCode = StatusCodes.Status403Forbidden;
+                genericResponse.Message = "Project is suspended. Only 'Project Status' can be modified.";
+                return genericResponse;
+            }
+
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null)
             {
@@ -241,18 +248,15 @@ namespace Linkdev.TeamTrack.Application.Services
                 return genericResponse;
             }
 
-            var taskProjectIdList = await _unitOfWork.TaskRepository.Find(T => T.AssignedUserId == userId && T.IsActive == true)
-                                                                    .Select(T => T.ProjectId)
-                                                                    .ToListAsync();
-
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
-                                      .FindAsync(P => (P.ProjectManagerId.Equals(userId) || taskProjectIdList.Contains(P.Id))
+                                      .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
                                                           && P.IsActive == true
                                                           && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
                                                           && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
                                                  , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
                                                  , P => P.CreatedDate
-                                                 , nameof(Project.ProjectManager)
+                                                 ,"desc"
+                                                 , nameof(Project.ProjectManager) , nameof(Project.Tasks)
                                                  );
 
             if (allprojectsPaginated.Data?.Any() == false)

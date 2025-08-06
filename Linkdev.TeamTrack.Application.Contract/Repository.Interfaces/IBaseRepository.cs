@@ -8,13 +8,16 @@ namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
     public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
     {
         Task AddAsync(TEntity entity);
+        Task AddListAsync(List<TEntity> entities);
         void Update(TEntity entity);
+        void UpdateList(List<TEntity> entities);
         void Remove(TEntity entity);
         Task<TEntity?> GetByIdAsync(TKey id);
         IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[]? includes);
         Task<PaginatedResponse<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate,
                                                    Paging paging,
                                                    Expression<Func<TEntity, object>>? orderByKeySelector = null,
+                                                   string sortingDirection = "asc",
                                                    params string[]? includes);
     }
 }

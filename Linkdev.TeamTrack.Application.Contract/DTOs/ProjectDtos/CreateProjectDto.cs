@@ -10,7 +10,5 @@ namespace Linkdev.TeamTrack.Contract.DTOs.ProjectDtos
         [MaxLength(2000 , ErrorMessage = "Description field can not be more than 2000 character")]
         public string? Description { get; set; }
         public string ProjectManagerId { get; set; }
-        
-        //public ProjectStatus ProjectStatus { get; set; }
     }
 }
