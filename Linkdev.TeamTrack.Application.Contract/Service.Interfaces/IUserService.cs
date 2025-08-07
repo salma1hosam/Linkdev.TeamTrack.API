@@ -12,5 +12,6 @@ namespace Linkdev.TeamTrack.Contract.Service.Interfaces
         Task<GenericResponse<UserRoleDto>> UpdateUserRoleAsync(SetUserRoleDto setUserRoleDto);
         Task<GenericResponse<PaginatedResponse<GetAllUsersDto>>> GetAllUsersAsync(UserQueryParams userQueryParams);
         Task<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>> GetAllProjectManagersAsync();
+        Task<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>> GetAllTeamMembersAsync();
     }
 }
