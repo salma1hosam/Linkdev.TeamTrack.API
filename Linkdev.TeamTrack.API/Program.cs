@@ -1,3 +1,4 @@
+using Linkdev.TeamTrack.API.Middlewares;
 using Linkdev.TeamTrack.Application.MappingProfiles;
 using Linkdev.TeamTrack.Application.Services;
 using Linkdev.TeamTrack.Contract.Repository.Interfaces;
@@ -60,6 +61,7 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
             builder.Services.AddScoped<IProjectService , ProjectService>();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
             #endregion
 
             var app = builder.Build();
@@ -71,6 +73,8 @@ namespace Linkdev.TeamTrack.API
             #endregion
 
             #region Configure the HTTP request pipeline.
+            app.UseExceptionHandler("/error");
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

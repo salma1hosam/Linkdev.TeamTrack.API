@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
+using Linkdev.TeamTrack.Contract.Exceptions;
 using Linkdev.TeamTrack.Contract.Repository.Interfaces;
 using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Linkdev.TeamTrack.Core.Enums;
@@ -15,238 +16,108 @@ namespace Linkdev.TeamTrack.Application.Services
 {
     public class ProjectService(IUnitOfWork _unitOfWork, IMapper _mapper, UserManager<TeamTrackUser> _userManager) : IProjectService
     {
-        public async Task<GenericResponse<ProjectDto>> AddProjectAsync(CreateProjectDto createProjectDto)
+        public async Task<ProjectDto> AddProjectAsync(CreateProjectDto createProjectDto)
         {
-            var genericResponse = new GenericResponse<ProjectDto>();
+            if (createProjectDto is null) throw new BadRequestException("Invalid Data");
 
-            if (createProjectDto is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Enter a Valid Data";
-                return genericResponse;
-            }
-
-            var user = await _userManager.FindByIdAsync(createProjectDto.ProjectManagerId);
-            if (user is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "Project Manager is Not Found";
-                return genericResponse;
-            }
+            var user = await _userManager.FindByIdAsync(createProjectDto.ProjectManagerId)
+                ?? throw new NotFoundException("Project Manager is Not Found");
 
             if (_userManager.GetRolesAsync(user).Result.FirstOrDefault() != "Project Manager")
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "The selected user is not in Project Manager Role";
-                return genericResponse;
-            }
+                throw new BadRequestException("The selected user is not in Project Manager Role");
 
             var project = _mapper.Map<CreateProjectDto, Project>(createProjectDto);
 
             await _unitOfWork.ProjectRepository.AddAsync(project);
             var rows = await _unitOfWork.SaveChangesAsync();
-            if (rows > 0)
-            {
-                genericResponse.StatusCode = StatusCodes.Status201Created;
-                genericResponse.Message = "Project Created Successfully";
-                genericResponse.Data = _mapper.Map<Project, ProjectDto>(project);
-                return genericResponse;
-            }
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Failed to Create the Project";
-            return genericResponse;
+            if (rows < 1) throw new Exception("Failed to Create the Project");
+
+            return _mapper.Map<Project, ProjectDto>(project);
         }
 
-        public async Task<GenericResponse<ReturnedProjectUpdateDto>> AssignProjectManagerAsync(SetProjectManagerDto setProjectManagerDto)
+        public async Task<ReturnedProjectUpdateDto> AssignProjectManagerAsync(SetProjectManagerDto setProjectManagerDto)
         {
-            var genericResponse = new GenericResponse<ReturnedProjectUpdateDto>();
-
-            if (setProjectManagerDto is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Enter a Valid Data";
-                return genericResponse;
-            }
+            if (setProjectManagerDto is null) throw new BadRequestException("Invalid Data");
 
             var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == setProjectManagerDto.Id && P.IsActive == true)
-                                                             .FirstOrDefaultAsync();
-            if (project is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "Project is Not Found";
-                return genericResponse;
-            }
+                                                             .FirstOrDefaultAsync()
+                                                             ?? throw new NotFoundException("Project is Not Found");
 
             if (project.ProjectManagerId == setProjectManagerDto.ProjectManagerId)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "This Project Manager is already assigned to this project";
-                return genericResponse;
-            }
+                throw new BadRequestException("This Project Manager is already assigned to this project");
 
-            var user = await _userManager.FindByIdAsync(setProjectManagerDto.ProjectManagerId);
-            if (user is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "This Project Manager is Not Found";
-                return genericResponse;
-            }
+            var user = await _userManager.FindByIdAsync(setProjectManagerDto.ProjectManagerId)
+                ?? throw new NotFoundException("This Project Manager is Not Found");
 
             var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
             if (role.IsNullOrEmpty() || !role.Contains("Project Manager"))
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "The selected user is not in Project Manager Role";
-                return genericResponse;
-            }
+                throw new BadRequestException("The selected user is not in Project Manager Role");
 
             _mapper.Map(setProjectManagerDto, project);
             project.LastUpdatedDate = DateTime.Now;
 
             _unitOfWork.ProjectRepository.Update(project);
             var rows = await _unitOfWork.SaveChangesAsync();
-            if (rows > 0)
-            {
-                genericResponse.StatusCode = StatusCodes.Status200OK;
-                genericResponse.Message = "Project Manager Assigned Successfully";
-                genericResponse.Data = _mapper.Map<Project, ReturnedProjectUpdateDto>(project);
-                return genericResponse;
-            }
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Failed to Assign Project Manager to this Project";
-            return genericResponse;
+            if (rows < 1) throw new Exception("Failed to Assign Project Manager to this Project");
+
+            return _mapper.Map<Project, ReturnedProjectUpdateDto>(project);
         }
 
-        public async Task<GenericResponse<ReturnedProjectUpdateDto>> UpdateProjectDetailsAsync(string userId, UpdateProjectDetailsDto updateProjectDetailsDto)
+        public async Task<ReturnedProjectUpdateDto> UpdateProjectDetailsAsync(string userId, UpdateProjectDetailsDto updateProjectDetailsDto)
         {
-            var genericResponse = new GenericResponse<ReturnedProjectUpdateDto>();
+            if (updateProjectDetailsDto is null) throw new BadRequestException("Invalid Data");
 
-            if (updateProjectDetailsDto is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Enter a Valid Data";
-                return genericResponse;
-            }
-
-            if (userId.IsNullOrEmpty())
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "User Id is Invalid";
-                return genericResponse;
-            }
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
             var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == updateProjectDetailsDto.Id && P.IsActive == true,
                                                                    nameof(Project.ProjectManager))
-                                                             .FirstOrDefaultAsync();
-
-            if (project is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "Project is Not Found";
-                return genericResponse;
-            }
+                                                             .FirstOrDefaultAsync()
+                                                             ?? throw new NotFoundException("Project is Not Found");
 
             if (project.ProjectStatus == ProjectStatus.Suspended)
-            {
-                genericResponse.StatusCode = StatusCodes.Status403Forbidden;
-                genericResponse.Message = "Project is suspended. Only 'Project Status' can be modified.";
-                return genericResponse;
-            }
+                throw new ForbiddenException("Project is suspended. Only 'Project Status' can be modified.");
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "User is Not Found";
-                return genericResponse;
-            }
+            var user = await _userManager.FindByIdAsync(userId) ?? throw new NotFoundException("User is Not Found");
 
             var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
-
             if (role.Contains("Project Manager") && project.ProjectManagerId != userId)
-            {
-                genericResponse.StatusCode = StatusCodes.Status403Forbidden;
-                genericResponse.Message = "You're Not Authorized to Update this Project";
-                return genericResponse;
-            }
+                throw new ForbiddenException("You're Not Authorized to Update this Project");
 
             _mapper.Map(updateProjectDetailsDto, project);
             project.LastUpdatedDate = DateTime.Now;
 
             _unitOfWork.ProjectRepository.Update(project);
             var rows = await _unitOfWork.SaveChangesAsync();
-            if (rows > 0)
-            {
-                genericResponse.StatusCode = StatusCodes.Status200OK;
-                genericResponse.Message = "Project Updated Successfully";
-                genericResponse.Data = _mapper.Map<Project, ReturnedProjectUpdateDto>(project);
-                return genericResponse;
-            }
+            if (rows < 1) throw new Exception("Failed to Update the Project");
 
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Failed to Update the Project";
-            return genericResponse;
-
-
+            return _mapper.Map<Project, ReturnedProjectUpdateDto>(project);
         }
 
-        public async Task<GenericResponse<ProjectStatusDto>> UpdateProjectStatusAsync(string userId, UpdateProjectStatusDto updateProjectStatusDto)
+        public async Task<ProjectStatusDto> UpdateProjectStatusAsync(string userId, UpdateProjectStatusDto updateProjectStatusDto)
         {
-            var genericResponse = new GenericResponse<ProjectStatusDto>();
+            if (updateProjectStatusDto is null) throw new BadRequestException("Invalid Data");
 
-            if (updateProjectStatusDto is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "Enter a Valid Data";
-                return genericResponse;
-            }
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
-            if (userId.IsNullOrEmpty())
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "User Id is Invalid";
-                return genericResponse;
-            }
-
-            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == updateProjectStatusDto.Id &&
-                                                                   P.IsActive == true &&
-                                                                   P.ProjectManagerId == userId,
-                                                                   nameof(Project.ProjectManager)).FirstOrDefaultAsync();
-
-            if (project is null)
-            {
-                genericResponse.StatusCode = StatusCodes.Status404NotFound;
-                genericResponse.Message = "Project is Not Found";
-                return genericResponse;
-            }
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == updateProjectStatusDto.Id && P.IsActive == true
+                                                                   && P.ProjectManagerId == userId
+                                                                   , nameof(Project.ProjectManager))
+                                                             .FirstOrDefaultAsync()
+                                                             ?? throw new NotFoundException("Project is Not Found");
 
             _mapper.Map(updateProjectStatusDto, project);
             project.LastUpdatedDate = DateTime.Now;
 
             _unitOfWork.ProjectRepository.Update(project);
             var rows = await _unitOfWork.SaveChangesAsync();
-            if (rows > 0)
-            {
-                genericResponse.StatusCode = StatusCodes.Status200OK;
-                genericResponse.Message = "Project Status Updated Successfully";
-                genericResponse.Data = _mapper.Map<Project, ProjectStatusDto>(project);
-                return genericResponse;
-            }
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "Failed to Update the Project Status";
-            return genericResponse;
+            if (rows < 1) throw new Exception("Failed to Update the Project Status");
+
+            return _mapper.Map<Project, ProjectStatusDto>(project);
         }
 
-        public async Task<GenericResponse<PaginatedResponse<GetAllProjectsDto>>> ViewAllProjectsAsync(string userId, ProjectQueryParams projectQueryParams)
+        public async Task<PaginatedResponse<GetAllProjectsDto>> ViewAllProjectsAsync(string userId, ProjectQueryParams projectQueryParams)
         {
-            var genericResponse = new GenericResponse<PaginatedResponse<GetAllProjectsDto>>();
-
-            if (userId.IsNullOrEmpty())
-            {
-                genericResponse.StatusCode = StatusCodes.Status400BadRequest;
-                genericResponse.Message = "User Id is Invalid";
-                return genericResponse;
-            }
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
                                       .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
@@ -255,16 +126,16 @@ namespace Linkdev.TeamTrack.Application.Services
                                                           && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
                                                  , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
                                                  , P => P.CreatedDate
-                                                 ,"desc"
-                                                 , nameof(Project.ProjectManager) , nameof(Project.Tasks)
+                                                 , "desc"
+                                                 , nameof(Project.ProjectManager), nameof(Project.Tasks)
                                                  );
 
-            if (allprojectsPaginated.Data?.Any() == false)
-            {
-                genericResponse.StatusCode = StatusCodes.Status200OK;
-                genericResponse.Message = "There is no data to be displayed";
-                return genericResponse;
-            }
+            //if (allprojectsPaginated.Data?.Any() == false)
+            //{
+            //    genericResponse.StatusCode = StatusCodes.Status200OK;
+            //    genericResponse.Message = "There is no data to be displayed";
+            //    return genericResponse;
+            //}
 
             var mappedProjects = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
             {
@@ -274,18 +145,13 @@ namespace Linkdev.TeamTrack.Application.Services
                 ProjectStatus = P.ProjectStatus.ToString()
             }).ToList();
 
-            var paginatedResult = new PaginatedResponse<GetAllProjectsDto>()
+            return new PaginatedResponse<GetAllProjectsDto>()
             {
                 TotalCount = allprojectsPaginated.TotalCount,
                 PageNumber = allprojectsPaginated.PageNumber,
                 PageSize = allprojectsPaginated.PageSize,
                 Data = mappedProjects
             };
-
-            genericResponse.StatusCode = StatusCodes.Status200OK;
-            genericResponse.Message = "All Projects retreived successfully";
-            genericResponse.Data = paginatedResult;
-            return genericResponse;
         }
     }
 }

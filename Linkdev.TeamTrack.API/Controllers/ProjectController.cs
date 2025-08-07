@@ -14,7 +14,7 @@ namespace Linkdev.TeamTrack.API.Controllers
     {
         [Authorize(Roles = "Admin")]
         [HttpPost("AddProject")]
-        public async Task<ActionResult<GenericResponse<ProjectDto>>> AddProject(CreateProjectDto createProjectDto)
+        public async Task<ActionResult<ProjectDto>> AddProject(CreateProjectDto createProjectDto)
         {
             var result = await _projectService.AddProjectAsync(createProjectDto);
             return Ok(result);
@@ -23,7 +23,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Project Manager")]
         [HttpPut("UpdateProjectStatus")]
-        public async Task<ActionResult<GenericResponse<ProjectDto>>> UpdateProjectStatus(UpdateProjectStatusDto updateProjectStatus)
+        public async Task<ActionResult<ProjectStatusDto>> UpdateProjectStatus(UpdateProjectStatusDto updateProjectStatus)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _projectService.UpdateProjectStatusAsync(userId , updateProjectStatus);
@@ -32,7 +32,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin,Project Manager")]
         [HttpPut("UpdateProjectDetails")]
-        public async Task<ActionResult<GenericResponse<ReturnedProjectUpdateDto>>> UpdateProjectDetails(UpdateProjectDetailsDto updateProjectDetailsDto)
+        public async Task<ActionResult<ReturnedProjectUpdateDto>> UpdateProjectDetails(UpdateProjectDetailsDto updateProjectDetailsDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _projectService.UpdateProjectDetailsAsync(userId , updateProjectDetailsDto);
@@ -41,7 +41,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Project Manager,Team Member")]
         [HttpGet("ViewAllProjects")]
-        public async Task<ActionResult<GenericResponse<PaginatedResponse<GetAllProjectsDto>>>> ViewAllProjects([FromQuery] ProjectQueryParams projectQueryParams)
+        public async Task<ActionResult<PaginatedResponse<GetAllProjectsDto>>> ViewAllProjects([FromQuery] ProjectQueryParams projectQueryParams)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _projectService.ViewAllProjectsAsync(userId , projectQueryParams);
@@ -50,7 +50,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("AssignProjectManager")]
-        public async Task<ActionResult<GenericResponse<ReturnedProjectUpdateDto>>> AssignProjectManager(SetProjectManagerDto setProjectManagerDto)
+        public async Task<ActionResult<ReturnedProjectUpdateDto>> AssignProjectManager(SetProjectManagerDto setProjectManagerDto)
         {
             var result = await _projectService.AssignProjectManagerAsync(setProjectManagerDto);
             return Ok(result);
