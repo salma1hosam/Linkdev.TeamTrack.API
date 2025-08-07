@@ -252,6 +252,48 @@ namespace Linkdev.TeamTrack.Application.Services
             return genericResponse;
         }
 
+        public async Task<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>> GetAllProjectManagersAsync()
+        {
+            var genericResponse = new GenericResponse<IEnumerable<GetAllUsersInRoleDto>>();
+
+            var projectManagerUsers = await _userManager.GetUsersInRoleAsync("Project Manager");
+            if(projectManagerUsers?.Any() == false)
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "No data to be displayed";
+                return genericResponse;
+            }
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Project Manager Users retrieved successfully";
+            genericResponse.Data = projectManagerUsers.Select(U => new GetAllUsersInRoleDto()
+            {
+                Id = U.Id,
+                UserName = U.UserName
+            });
+            return genericResponse;
+        }
+
+        public async Task<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>> GetAllTeamMembersAsync()
+        {
+            var genericResponse = new GenericResponse<IEnumerable<GetAllUsersInRoleDto>>();
+
+            var teamMemberUsers = await _userManager.GetUsersInRoleAsync("Team Member");
+            if(teamMemberUsers?.Any() == false)
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "No data to be displayed";
+                return genericResponse;
+            }
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Team Member Users retrieved successfully";
+            genericResponse.Data = teamMemberUsers.Select(U => new GetAllUsersInRoleDto()
+            {
+                Id = U.Id,
+                UserName = U.UserName
+            });
+            return genericResponse;
+        }
+       
         private async Task<string> CreateTokenAsync(TeamTrackUser user)
         {
             var Claims = new List<Claim>()

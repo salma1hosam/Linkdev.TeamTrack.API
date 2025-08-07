@@ -4,6 +4,7 @@ using Linkdev.TeamTrack.Contract.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Linkdev.TeamTrack.API.Controllers
 {
@@ -53,6 +54,22 @@ namespace Linkdev.TeamTrack.API.Controllers
         public async Task<ActionResult<GenericResponse<PaginatedResponse<GetAllUsersDto>>>> GetAllUsers([FromQuery] UserQueryParams userQueryParams)
         {
             var result = await _userService.GetAllUsersAsync(userQueryParams);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllProjectManagers")]
+        public async Task<ActionResult<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>>> GetAllProjectManagers()
+        {
+            var result = await _userService.GetAllProjectManagersAsync();
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin,Project Manager")]
+        [HttpGet("GetAllTeamMembers")]
+        public async Task<ActionResult<GenericResponse<IEnumerable<GetAllUsersDto>>>> GetAllTeamMembers()
+        {
+            var result = await _userService.GetAllTeamMembersAsync();
             return Ok(result);
         }
     }
