@@ -55,5 +55,13 @@ namespace Linkdev.TeamTrack.API.Controllers
             var result = await _userService.GetAllUsersAsync(userQueryParams);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllProjectManagers")]
+        public async Task<ActionResult<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>>> GetAllProjectManagers()
+        {
+            var result = await _userService.GetAllProjectManagersAsync();
+            return Ok(result);
+        }
     }
 }

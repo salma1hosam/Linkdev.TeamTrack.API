@@ -252,6 +252,27 @@ namespace Linkdev.TeamTrack.Application.Services
             return genericResponse;
         }
 
+        public async Task<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>> GetAllProjectManagersAsync()
+        {
+            var genericResponse = new GenericResponse<IEnumerable<GetAllUsersInRoleDto>>();
+
+            var projectManagerUsers = await _userManager.GetUsersInRoleAsync("Project Manager");
+            if(projectManagerUsers?.Any() == false)
+            {
+                genericResponse.StatusCode = StatusCodes.Status200OK;
+                genericResponse.Message = "No data to be displayed";
+                return genericResponse;
+            }
+            genericResponse.StatusCode = StatusCodes.Status200OK;
+            genericResponse.Message = "Project Manager Users is retrieved successfully";
+            genericResponse.Data = projectManagerUsers.Select(U => new GetAllUsersInRoleDto()
+            {
+                Id = U.Id,
+                UserName = U.UserName
+            });
+            return genericResponse;
+        }
+
         private async Task<string> CreateTokenAsync(TeamTrackUser user)
         {
             var Claims = new List<Claim>()
@@ -277,6 +298,5 @@ namespace Linkdev.TeamTrack.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }
