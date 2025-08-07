@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Linkdev.TeamTrack.Infrastructure.EmailService;
 
 namespace Linkdev.TeamTrack.API
 {
@@ -62,6 +63,8 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
             builder.Services.AddScoped<IProjectService , ProjectService>();
             builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
+            builder.Services.Configure<SmtpConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
+            builder.Services.AddScoped<IEmailService , EmailService>();
             #endregion
 
             var app = builder.Build();

@@ -12,13 +12,13 @@ namespace Linkdev.TeamTrack.Infrastructure.Repositories
     {
         public async Task AddAsync(TEntity entity) => await _dbContext.Set<TEntity>().AddAsync(entity);
 
-        public async Task AddListAsync(List<TEntity> entities) => await _dbContext.Set<TEntity>().AddRangeAsync(entities);
+        public async Task AddListAsync(IEnumerable<TEntity> entities) => await _dbContext.Set<TEntity>().AddRangeAsync(entities);
 
         public void Remove(TEntity entity) => _dbContext.Set<TEntity>().Remove(entity);
 
         public void Update(TEntity entity) => _dbContext.Set<TEntity>().Update(entity);
 
-        public void UpdateList(List<TEntity> entities) => _dbContext.Set<TEntity>().UpdateRange(entities);
+        public void UpdateList(IEnumerable<TEntity> entities) => _dbContext.Set<TEntity>().UpdateRange(entities);
 
         public async Task<TEntity?> GetByIdAsync(TKey id) => await _dbContext.Set<TEntity>().FindAsync(id);
 

@@ -55,5 +55,13 @@ namespace Linkdev.TeamTrack.API.Controllers
             var result = await _projectService.AssignProjectManagerAsync(setProjectManagerDto);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("DeleteProject")]
+        public async Task<ActionResult<bool>> DeleteProject(int projectId)
+        {
+            var result = await _projectService.DeleteProjectAsync(projectId);
+            return Ok(result);
+        }
     }
 }

@@ -10,5 +10,6 @@ namespace Linkdev.TeamTrack.Contract.Application.Interfaces
         Task<ReturnedProjectUpdateDto> UpdateProjectDetailsAsync(string userId , UpdateProjectDetailsDto updateProjectDetailsDto);
         Task<PaginatedResponse<GetAllProjectsDto>> ViewAllProjectsAsync(string userId , ProjectQueryParams projectQueryParams);
         Task<ReturnedProjectUpdateDto> AssignProjectManagerAsync(SetProjectManagerDto setProjectManagerDto);
+        Task<bool> DeleteProjectAsync(int projectId);
     }
 }

@@ -14,7 +14,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Linkdev.TeamTrack.Application.Services
 {
-    public class ProjectService(IUnitOfWork _unitOfWork, IMapper _mapper, UserManager<TeamTrackUser> _userManager) : IProjectService
+    public class ProjectService(IUnitOfWork _unitOfWork, IMapper _mapper, UserManager<TeamTrackUser> _userManager , 
+                                IEmailService _emailService) : IProjectService
     {
         public async Task<ProjectDto> AddProjectAsync(CreateProjectDto createProjectDto)
         {
@@ -152,6 +153,33 @@ namespace Linkdev.TeamTrack.Application.Services
                 PageSize = allprojectsPaginated.PageSize,
                 Data = mappedProjects
             };
+        }
+
+        public async Task<bool> DeleteProjectAsync(int projectId)
+        {
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == projectId && P.IsActive == true
+                                                                   , nameof(Project.Tasks), nameof(Project.ProjectManager))
+                                                             .FirstOrDefaultAsync() ?? throw new NotFoundException("Project is Not Found");
+
+            project.IsActive = false;
+            _unitOfWork.ProjectRepository.Update(project);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to Delete the project");
+
+            if (project.Tasks?.Any() == true)
+            {
+                foreach (var task in project.Tasks)
+                    task.IsActive = false;
+                _unitOfWork.TaskRepository.UpdateList(project.Tasks);
+                var rowsNumber = await _unitOfWork.SaveChangesAsync();
+                if (rowsNumber < 1) throw new Exception("Failed to delete the Project related Tasks ");
+            }
+
+            await _emailService.SendEmailAsync(toEmail: project.ProjectManager.Email,
+                                               subject: "Project Deleted",
+                                               messageBody: $"{project.Name} Project has been deleted");
+
+            return true;
         }
     }
 }

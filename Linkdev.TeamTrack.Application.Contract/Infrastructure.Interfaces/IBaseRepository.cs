@@ -8,9 +8,9 @@ namespace Linkdev.TeamTrack.Contract.Infrastructure.Interfaces
     public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
     {
         Task AddAsync(TEntity entity);
-        Task AddListAsync(List<TEntity> entities);
+        Task AddListAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
-        void UpdateList(List<TEntity> entities);
+        void UpdateList(IEnumerable<TEntity> entities);
         void Remove(TEntity entity);
         Task<TEntity?> GetByIdAsync(TKey id);
         IQueryable<TEntity> Find(Expression<Func<TEntity, bool>> predicate, params string[]? includes);
