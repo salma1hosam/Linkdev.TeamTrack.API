@@ -3,7 +3,7 @@ using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using System.Linq.Expressions;
 
-namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
+namespace Linkdev.TeamTrack.Contract.Infrastructure.Interfaces
 {
     public interface IBaseRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
     {

@@ -1,4 +1,4 @@
-﻿using Linkdev.TeamTrack.Contract.Repository.Interfaces;
+﻿using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

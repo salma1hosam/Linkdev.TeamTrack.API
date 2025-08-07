@@ -1,4 +1,4 @@
-﻿namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
+﻿namespace Linkdev.TeamTrack.Contract.Infrastructure.Interfaces
 {
     public interface IDataSeeding
     {

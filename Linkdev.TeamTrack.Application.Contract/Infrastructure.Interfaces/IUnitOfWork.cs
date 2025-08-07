@@ -1,6 +1,6 @@
 ﻿using Linkdev.TeamTrack.Core.Models;
 
-namespace Linkdev.TeamTrack.Contract.Repository.Interfaces
+namespace Linkdev.TeamTrack.Contract.Infrastructure.Interfaces
 {
     public interface IUnitOfWork
     {

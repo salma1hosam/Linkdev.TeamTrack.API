@@ -2,8 +2,8 @@
 using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.Exceptions;
-using Linkdev.TeamTrack.Contract.Repository.Interfaces;
-using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
+using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Linkdev.TeamTrack.Core.Enums;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;

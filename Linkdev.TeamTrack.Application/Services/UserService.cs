@@ -1,6 +1,6 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
 using Linkdev.TeamTrack.Core.Responses;
-using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

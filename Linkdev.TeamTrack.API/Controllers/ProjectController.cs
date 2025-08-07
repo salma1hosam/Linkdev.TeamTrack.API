@@ -1,5 +1,5 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
-using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Linkdev.TeamTrack.Core.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

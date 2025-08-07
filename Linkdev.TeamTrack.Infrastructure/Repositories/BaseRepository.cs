@@ -1,5 +1,5 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs;
-using Linkdev.TeamTrack.Contract.Repository.Interfaces;
+using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;

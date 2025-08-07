@@ -1,4 +1,4 @@
-﻿using Linkdev.TeamTrack.Contract.Repository.Interfaces;
+﻿using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
 using Linkdev.TeamTrack.Infrastructure.Repositories;
