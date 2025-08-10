@@ -1,22 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Linkdev.TeamTrack.Contract.DTOs.TaskDtos
+namespace Linkdev.TeamTrack.Contract.DTOs
 {
-    public class TaskDto
+    public class ReturnedTaskUpdateDto
     {
         public string Title { get; set; }
         public string? Description { get; set; }
-        
+
         [DataType(DataType.DateTime)]
         public DateTime StartDate { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime FinishDate { get; set; }
-        public int CompletedTaskPercent { get; set; }
         public string ProjectName { get; set; }
-        public string AssignedUserName { get; set; }
-        
+
         [DataType(DataType.DateTime)]
-        public DateTime CreatedDate { get; set; }
+        public DateTime LastUpdatedDate { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 using Linkdev.TeamTrack.Core.Models;
@@ -33,6 +34,9 @@ namespace Linkdev.TeamTrack.Application.MappingProfiles
             CreateMap<ProjectTask, TaskDto>()
                 .ForMember(dto => dto.ProjectName , option => option.MapFrom(src => src.Project.Name))
                 .ForMember(dto => dto.AssignedUserName, option => option.MapFrom(src => src.AssignedUser.UserName));
+            CreateMap<UpdateTaskDetailsDto, ProjectTask>();
+            CreateMap<ProjectTask, ReturnedTaskUpdateDto>()
+                .ForMember(dto => dto.ProjectName , option => option.MapFrom(src => src.Project.Name));
         }
     }
 }

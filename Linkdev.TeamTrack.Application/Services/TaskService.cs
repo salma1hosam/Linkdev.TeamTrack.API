@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Linkdev.TeamTrack.Contract.Application.Interfaces;
+using Linkdev.TeamTrack.Contract.DTOs;
+using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 using Linkdev.TeamTrack.Contract.Exceptions;
 using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
@@ -39,6 +41,38 @@ namespace Linkdev.TeamTrack.Application.Services
             if (rows < 1) throw new Exception("Failed to Create the Task");
 
             return _mapper.Map<ProjectTask, TaskDto>(task);
+        }
+
+        public async Task<ReturnedTaskUpdateDto> UpdateTaskDetailsAsync(string userId, UpdateTaskDetailsDto updateTaskDetailsDto)
+        {
+            if (updateTaskDetailsDto is null) throw new BadRequestException("Invalid Data");
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
+
+            var user = await _userManager.FindByIdAsync(userId) ?? throw new NotFoundException("User is Not Found");
+
+            var task = await _unitOfWork.TaskRepository.Find(T => T.Id == updateTaskDetailsDto.Id && T.IsActive == true
+                                                             ,nameof(ProjectTask.Project))
+                                                       .FirstOrDefaultAsync() ?? throw new NotFoundException("Task is Not Found");
+
+            var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
+            if(role.Contains("Project Manager") && task.Project.ProjectManagerId != userId)
+                throw new ForbiddenException("You're Not authorized to update this task");
+
+            if (updateTaskDetailsDto.FinishDate <= updateTaskDetailsDto.StartDate)
+                throw new BadRequestException("Finish Date should be greater than Start Date");
+
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == updateTaskDetailsDto.ProjectId && P.IsActive == true)
+                                                             .FirstOrDefaultAsync() 
+                                                             ?? throw new NotFoundException("The selected project is Not Found");
+
+            _mapper.Map(updateTaskDetailsDto, task);
+            task.LastUpdatedDate = DateTime.Now;
+
+            _unitOfWork.TaskRepository.Update(task);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to Update the Task");
+
+            return _mapper.Map<ProjectTask , ReturnedTaskUpdateDto>(task);
         }
     }
 }
