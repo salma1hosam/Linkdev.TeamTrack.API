@@ -1,6 +1,6 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
 using Linkdev.TeamTrack.Core.Responses;
-using Linkdev.TeamTrack.Contract.Service.Interfaces;
+using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Linkdev.TeamTrack.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -299,7 +299,8 @@ namespace Linkdev.TeamTrack.Application.Services
             var Claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.GivenName , user.UserName)
+                new Claim(ClaimTypes.GivenName , user.UserName),
+                new Claim(ClaimTypes.NameIdentifier , user.Id)
             };
 
             var roles = await _userManager.GetRolesAsync(user);

@@ -1,7 +1,7 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
 using Linkdev.TeamTrack.Core.Responses;
 
-namespace Linkdev.TeamTrack.Contract.Service.Interfaces
+namespace Linkdev.TeamTrack.Contract.Application.Interfaces
 {
     public interface IUserService
     {
