@@ -65,6 +65,7 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
             builder.Services.Configure<SmtpConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddScoped<IEmailService , EmailService>();
+            builder.Services.AddScoped<ITaskService , TaskService>();
             #endregion
 
             var app = builder.Build();
