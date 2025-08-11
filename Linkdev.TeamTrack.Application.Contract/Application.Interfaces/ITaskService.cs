@@ -1,5 +1,4 @@
-﻿using Linkdev.TeamTrack.Contract.DTOs;
-using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
+﻿using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 
 namespace Linkdev.TeamTrack.Contract.Application.Interfaces
 {
@@ -7,5 +6,6 @@ namespace Linkdev.TeamTrack.Contract.Application.Interfaces
     {
         Task<TaskDto> AddTaskAsync(string userId, CreateTaskDto createTaskDto);
         Task<ReturnedTaskUpdateDto> UpdateTaskDetailsAsync(string userId, UpdateTaskDetailsDto updateTaskDetailsDto);
+        Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto);
     }
 }

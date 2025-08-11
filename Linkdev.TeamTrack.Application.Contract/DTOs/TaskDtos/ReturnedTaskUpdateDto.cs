@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Linkdev.TeamTrack.Contract.DTOs
+namespace Linkdev.TeamTrack.Contract.DTOs.TaskDtos
 {
     public class ReturnedTaskUpdateDto
     {

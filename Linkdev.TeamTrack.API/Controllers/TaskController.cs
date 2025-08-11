@@ -1,5 +1,4 @@
 ﻿using Linkdev.TeamTrack.Contract.Application.Interfaces;
-using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +25,15 @@ namespace Linkdev.TeamTrack.API.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _taskService.UpdateTaskDetailsAsync(userId, updateTaskDetailsDto);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin,Project Manager")]
+        [HttpPut("AssignTeamMemberOnTask")]
+        public async Task<ActionResult<ReturnedTeamMemberUpdateDto>> AssignTeamMemberOnTask(SetTeamMemberDto setTeamMemberDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _taskService.AssignTeamMemberOnTaskAsync(userId, setTeamMemberDto);
             return Ok(result);
         }
     }

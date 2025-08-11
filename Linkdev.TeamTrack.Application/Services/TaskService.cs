@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Linkdev.TeamTrack.Contract.Application.Interfaces;
-using Linkdev.TeamTrack.Contract.DTOs;
 using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 using Linkdev.TeamTrack.Contract.Exceptions;
@@ -42,7 +41,7 @@ namespace Linkdev.TeamTrack.Application.Services
 
             return _mapper.Map<ProjectTask, TaskDto>(task);
         }
-
+       
         public async Task<ReturnedTaskUpdateDto> UpdateTaskDetailsAsync(string userId, UpdateTaskDetailsDto updateTaskDetailsDto)
         {
             if (updateTaskDetailsDto is null) throw new BadRequestException("Invalid Data");
@@ -73,6 +72,37 @@ namespace Linkdev.TeamTrack.Application.Services
             if (rows < 1) throw new Exception("Failed to Update the Task");
 
             return _mapper.Map<ProjectTask , ReturnedTaskUpdateDto>(task);
+        }
+        
+        public async Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto)
+        {
+            if (setTeamMemberDto is null) throw new BadRequestException("Invalid Data");
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
+
+            var task = await _unitOfWork.TaskRepository.Find(T => T.Id == setTeamMemberDto.Id && T.IsActive == true
+                                                             , nameof(ProjectTask.AssignedUser), nameof(ProjectTask.Project))
+                                                       .FirstOrDefaultAsync() ?? throw new NotFoundException("Task is Not Found");
+
+            var user = await _userManager.FindByIdAsync(userId) ?? throw new NotFoundException("User is Not Found");
+
+            var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
+            if (role.Contains("Project Manager") && task.Project.ProjectManagerId != userId)
+                throw new ForbiddenException("You're Not authorized to assign team member on this project task");
+
+            if (task.AssignedUserId == setTeamMemberDto.AssignedUserId)
+                throw new BadRequestException("This Team Member is already assigned to this task");
+            
+            var teamMember = await _userManager.FindByIdAsync(setTeamMemberDto.AssignedUserId)
+                ?? throw new NotFoundException("Assigned Team Member is Not Found");
+
+            _mapper.Map(setTeamMemberDto, task);
+            task.LastUpdatedDate = DateTime.Now;
+
+            _unitOfWork.TaskRepository.Update(task);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to assign this Team Member to the task");
+
+            return _mapper.Map<ProjectTask, ReturnedTeamMemberUpdateDto>(task);
         }
     }
 }
