@@ -5,6 +5,7 @@ using Linkdev.TeamTrack.Contract.DTOs.ProjectDtos;
 using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
 using Linkdev.TeamTrack.Contract.Exceptions;
 using Linkdev.TeamTrack.Contract.Infrastructure.Interfaces;
+using Linkdev.TeamTrack.Core.Enums;
 using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using Microsoft.AspNetCore.Identity;
@@ -56,6 +57,9 @@ namespace Linkdev.TeamTrack.Application.Services
                                                              , nameof(ProjectTask.Project))
                                                        .FirstOrDefaultAsync() ?? throw new NotFoundException("Task is Not Found");
 
+            if (task.Project.ProjectStatus == ProjectStatus.Suspended)
+                throw new ForbiddenException("Cannot update the task because the project is suspended");
+
             var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
             if (role.Contains("Project Manager") && task.Project.ProjectManagerId != userId)
                 throw new ForbiddenException("You're Not authorized to update this task");
@@ -77,7 +81,7 @@ namespace Linkdev.TeamTrack.Application.Services
             return _mapper.Map<ProjectTask, ReturnedTaskUpdateDto>(task);
         }
 
-        public async Task<bool> DeleteTaskAsync(string userId, int taskId)
+        public async Task<string> DeleteTaskAsync(string userId, int taskId)
         {
             if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
@@ -101,7 +105,8 @@ namespace Linkdev.TeamTrack.Application.Services
             await _emailService.SendEmailAsync(toEmails: [task.Project.ProjectManager.Email , task.AssignedUser.Email]
                                                ,subject: "Task Deleted"
                                                ,messageBody: $"{task.Title} Task under {task.Project.Name} Project has been deleted");
-            return true;
+            
+            return $"Task {taskId} is successfully deleted";
         }
         
         public async Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto)
@@ -156,6 +161,19 @@ namespace Linkdev.TeamTrack.Application.Services
                                               , "desc"
                                               );
 
+            var paginatedResponse = new PaginatedResponse<GetAllTasksDto>
+            {
+                TotalCount = allTasksPaginated.TotalCount,
+                PageNumber = allTasksPaginated.PageNumber,
+                PageSize = allTasksPaginated.PageSize
+            };
+
+            if (allTasksPaginated.Data?.Any() == false)
+            {
+                paginatedResponse.Message = "There is no data to be displayed";
+                return paginatedResponse;
+            }
+
             var mappedTasks = allTasksPaginated.Data.Select(T => new GetAllTasksDto()
             {
                 Title = T.Title,
@@ -165,13 +183,8 @@ namespace Linkdev.TeamTrack.Application.Services
                 CompletedTaskPercent = T.CompletedTaskPercent
             }).ToList();
 
-            return new PaginatedResponse<GetAllTasksDto>()
-            {
-                TotalCount = allTasksPaginated.TotalCount,
-                PageNumber = allTasksPaginated.PageNumber,
-                PageSize = allTasksPaginated.PageSize,
-                Data = mappedTasks
-            };
+            paginatedResponse.Data = mappedTasks;
+            return paginatedResponse;
         }
 
     }

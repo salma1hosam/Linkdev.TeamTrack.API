@@ -1,4 +1,5 @@
-﻿using Linkdev.TeamTrack.Core.Responses;
+﻿using Linkdev.TeamTrack.Contract.Exceptions;
+using Linkdev.TeamTrack.Core.Responses;
 using System.Net;
 using System.Text.Json;
 
@@ -76,13 +77,21 @@ namespace Linkdev.TeamTrack.API.Middlewares
             {
                 var errorResponse = new Response<object>
                 {
-                    StatusCode = (int)HttpStatusCode.InternalServerError,
                     Message = "An unexpected error occurred.",
                     Errors = new List<string> { ex.Message }
                 };
 
+                errorResponse.StatusCode = ex switch
+                {
+                    NotFoundException => StatusCodes.Status404NotFound,
+                    BadRequestException => StatusCodes.Status400BadRequest,
+                    UnauthorizedException => StatusCodes.Status401Unauthorized,
+                    ForbiddenException => StatusCodes.Status403Forbidden,
+                    _ => StatusCodes.Status500InternalServerError
+                };
+
                 context.Response.Body = originalBodyStream;
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                context.Response.StatusCode = errorResponse.StatusCode;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse, _jsonOptions));
             }
