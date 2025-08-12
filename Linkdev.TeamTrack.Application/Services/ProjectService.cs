@@ -122,9 +122,9 @@ namespace Linkdev.TeamTrack.Application.Services
 
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
                                       .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
-                                                          && P.IsActive == true
-                                                          && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
-                                                          && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
+                                                 && P.IsActive == true
+                                                 && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
+                                                 && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
                                                  , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
                                                  , P => P.CreatedDate
                                                  , "desc"

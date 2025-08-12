@@ -1,4 +1,5 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.TaskDtos;
+using Linkdev.TeamTrack.Core.Responses;
 
 namespace Linkdev.TeamTrack.Contract.Application.Interfaces
 {
@@ -7,5 +8,6 @@ namespace Linkdev.TeamTrack.Contract.Application.Interfaces
         Task<TaskDto> AddTaskAsync(string userId, CreateTaskDto createTaskDto);
         Task<ReturnedTaskUpdateDto> UpdateTaskDetailsAsync(string userId, UpdateTaskDetailsDto updateTaskDetailsDto);
         Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto);
+        Task<PaginatedResponse<GetAllTasksDto>> ViewAllTasksAsync(string userId, int projectId, TaskFilterParams taskQueryParams);
     }
 }
