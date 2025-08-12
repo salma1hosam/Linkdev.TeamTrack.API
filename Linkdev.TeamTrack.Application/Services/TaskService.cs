@@ -13,7 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Linkdev.TeamTrack.Application.Services
 {
-    public class TaskService(IUnitOfWork _unitOfWork, UserManager<TeamTrackUser> _userManager, IMapper _mapper) : ITaskService
+    public class TaskService(IUnitOfWork _unitOfWork, UserManager<TeamTrackUser> _userManager, 
+                             IMapper _mapper, IEmailService _emailService) : ITaskService
     {
         public async Task<TaskDto> AddTaskAsync(string userId, CreateTaskDto createTaskDto)
         {
@@ -76,6 +77,33 @@ namespace Linkdev.TeamTrack.Application.Services
             return _mapper.Map<ProjectTask, ReturnedTaskUpdateDto>(task);
         }
 
+        public async Task<bool> DeleteTaskAsync(string userId, int taskId)
+        {
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
+
+            var task = await _unitOfWork.TaskRepository
+                      .FindWithIncludeExp(T => T.Id == taskId
+                                          ,T => T.Include(x => x.Project).ThenInclude(P => P.ProjectManager)
+                                          ,T => T.Include(x => x.AssignedUser))
+                      .FirstOrDefaultAsync() ?? throw new NotFoundException("Task is Not Found");
+
+            var user = await _userManager.FindByIdAsync(userId) ?? throw new NotFoundException("User is Not Found");
+            var role = _userManager.GetRolesAsync(user).Result.FirstOrDefault();
+            if (role.Contains("Project Manager") && task.Project.ProjectManagerId != userId)
+                throw new ForbiddenException("You're Not authorized to delete this task");
+
+            task.IsActive = false;
+            task.LastUpdatedDate = DateTime.Now;
+            _unitOfWork.TaskRepository.Update(task);
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to delete this task");
+
+            await _emailService.SendEmailAsync(toEmails: [task.Project.ProjectManager.Email , task.AssignedUser.Email]
+                                               ,subject: "Task Deleted"
+                                               ,messageBody: $"{task.Title} Task under {task.Project.Name} Project has been deleted");
+            return true;
+        }
+        
         public async Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto)
         {
             if (setTeamMemberDto is null) throw new BadRequestException("Invalid Data");
@@ -145,5 +173,6 @@ namespace Linkdev.TeamTrack.Application.Services
                 Data = mappedTasks
             };
         }
+
     }
 }

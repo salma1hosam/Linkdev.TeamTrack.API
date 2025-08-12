@@ -7,6 +7,7 @@ namespace Linkdev.TeamTrack.Contract.Application.Interfaces
     {
         Task<TaskDto> AddTaskAsync(string userId, CreateTaskDto createTaskDto);
         Task<ReturnedTaskUpdateDto> UpdateTaskDetailsAsync(string userId, UpdateTaskDetailsDto updateTaskDetailsDto);
+        Task<bool> DeleteTaskAsync(string userId, int taskId);
         Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto);
         Task<PaginatedResponse<GetAllTasksDto>> ViewAllTasksAsync(string userId, int projectId, TaskFilterParams taskQueryParams);
     }

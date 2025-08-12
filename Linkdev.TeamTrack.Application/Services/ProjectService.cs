@@ -122,9 +122,9 @@ namespace Linkdev.TeamTrack.Application.Services
 
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
                                       .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
-                                                 && P.IsActive == true
-                                                 && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
-                                                 && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
+                                                          && P.IsActive == true
+                                                          && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
+                                                          && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
                                                  , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
                                                  , P => P.CreatedDate
                                                  , "desc"
@@ -175,7 +175,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 if (rowsNumber < 1) throw new Exception("Failed to delete the Project related Tasks ");
             }
 
-            await _emailService.SendEmailAsync(toEmail: project.ProjectManager.Email,
+            await _emailService.SendEmailAsync(toEmails: [project.ProjectManager.Email],
                                                subject: "Project Deleted",
                                                messageBody: $"{project.Name} Project has been deleted");
 

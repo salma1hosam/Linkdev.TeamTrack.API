@@ -30,6 +30,15 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Project Manager")]
+        [HttpPut("DeleteTask/{taskId}")]
+        public async Task<IActionResult> DeleteTask(int taskId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _taskService.DeleteTaskAsync(userId, taskId);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin,Project Manager")]
         [HttpPut("AssignTeamMemberOnTask")]
         public async Task<IActionResult> AssignTeamMemberOnTask(SetTeamMemberDto setTeamMemberDto)
         {

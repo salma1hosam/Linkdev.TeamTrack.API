@@ -4,6 +4,7 @@ using Linkdev.TeamTrack.Core.Models;
 using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Infrastructure.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 
 namespace Linkdev.TeamTrack.Infrastructure.Repositories
@@ -30,6 +31,18 @@ namespace Linkdev.TeamTrack.Infrastructure.Repositories
                     items = items.Include(include);
 
             return items;
+        }
+
+        public IQueryable<TEntity> FindWithIncludeExp(Expression<Func<TEntity, bool>> predicate, 
+                                                      params Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>[]? includes)
+        {
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>().Where(predicate);
+
+            if (includes?.Any() == true)
+                foreach (var include in includes)
+                    query = include(query);
+
+            return query;
         }
 
         public async Task<PaginatedResponse<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate,
