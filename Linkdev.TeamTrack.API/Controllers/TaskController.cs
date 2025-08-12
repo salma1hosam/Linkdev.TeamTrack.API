@@ -48,8 +48,8 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Project Manager,Team Member")]
-        [HttpGet("ViewAllTasks/{projectId}")]
-        public async Task<IActionResult> ViewAllTasks(int projectId, [FromQuery] TaskFilterParams taskFilterParams)
+        [HttpPost("ViewAllTasks/{projectId}")]
+        public async Task<IActionResult> ViewAllTasks(int projectId, TaskFilterParams taskFilterParams)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var result = await _taskService.ViewAllTasksAsync(userId, projectId, taskFilterParams);
