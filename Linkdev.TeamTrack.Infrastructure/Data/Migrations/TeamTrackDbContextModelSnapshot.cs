@@ -63,7 +63,7 @@ namespace Linkdev.TeamTrack.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProjectManagerId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("Linkdev.TeamTrack.Core.Models.ProjectTask", b =>
@@ -118,7 +118,7 @@ namespace Linkdev.TeamTrack.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("Linkdev.TeamTrack.Core.Models.TeamTrackUser", b =>

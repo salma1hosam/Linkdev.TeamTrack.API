@@ -175,7 +175,7 @@ namespace Linkdev.TeamTrack.Application.Services
                 if (rowsNumber < 1) throw new Exception("Failed to delete the Project related Tasks ");
             }
 
-            await _emailService.SendEmailAsync(toEmail: project.ProjectManager.Email,
+            await _emailService.SendEmailAsync(toEmails: [project.ProjectManager.Email],
                                                subject: "Project Deleted",
                                                messageBody: $"{project.Name} Project has been deleted");
 

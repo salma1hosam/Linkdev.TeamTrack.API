@@ -62,9 +62,9 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
             builder.Services.AddScoped<IProjectService , ProjectService>();
-            builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
             builder.Services.Configure<SmtpConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddScoped<IEmailService , EmailService>();
+            builder.Services.AddScoped<ITaskService , TaskService>();
             #endregion
 
             var app = builder.Build();
@@ -76,13 +76,14 @@ namespace Linkdev.TeamTrack.API
             #endregion
 
             #region Configure the HTTP request pipeline.
-            app.UseExceptionHandler("/error");
 
-            if (app.Environment.IsDevelopment())
-            {
+            app.UseMiddleware<UnifiedResponseMiddleware>();
+
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
 
             app.UseHttpsRedirection();
 

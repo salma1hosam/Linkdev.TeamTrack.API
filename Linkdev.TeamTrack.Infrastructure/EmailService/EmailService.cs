@@ -8,14 +8,14 @@ namespace Linkdev.TeamTrack.Infrastructure.EmailService
 {
     public class EmailService(IOptions<SmtpConfiguration> _options) : IEmailService
     {
-        public async Task SendEmailAsync(string toEmail, string subject, string messageBody)
+        public async Task SendEmailAsync(IEnumerable<string> toEmails, string subject, string messageBody)
         {
             try
             {
                 var message = new MimeMessage();
 
                 message.From.Add(MailboxAddress.Parse(_options.Value.SmtpEmail));
-                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.To.AddRange(toEmails.Select(email => MailboxAddress.Parse(email)));
                 message.Subject = subject;
 
                 var bodyBuilder = new BodyBuilder();

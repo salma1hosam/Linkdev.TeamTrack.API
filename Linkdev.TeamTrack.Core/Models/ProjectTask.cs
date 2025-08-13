@@ -13,8 +13,8 @@ namespace Linkdev.TeamTrack.Core.Models
         public DateTime StartDate { get; set; }
         public DateTime FinishDate { get; set; }
 
-        [Range(0,100)]
-        public int CompletedTaskPercent { get; set; }
+        [Range(0, 100)]
+        public int CompletedTaskPercent { get; set; } = 0;
 
         [ForeignKey(nameof(AssignedUser))]
         public string AssignedUserId { get; set; } = string.Empty; //FK
