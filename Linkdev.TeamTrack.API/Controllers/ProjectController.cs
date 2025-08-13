@@ -13,7 +13,7 @@ namespace Linkdev.TeamTrack.API.Controllers
     public class ProjectController(IProjectService _projectService) : ControllerBase
     {
         [Authorize(Roles = "Admin")]
-        [HttpPost("AddProject")]
+        [HttpPost]
         public async Task<IActionResult> AddProject(CreateProjectDto createProjectDto)
         {
             var result = await _projectService.AddProjectAsync(createProjectDto);
@@ -22,7 +22,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("AssignProjectManager")]
+        [HttpPut("AssignToManager")]
         public async Task<IActionResult> AssignProjectManager(SetProjectManagerDto setProjectManagerDto)
         {
             var result = await _projectService.AssignProjectManagerAsync(setProjectManagerDto);
@@ -30,7 +30,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Project Manager")]
-        [HttpPut("UpdateProjectStatus")]
+        [HttpPut("Status")]
         public async Task<IActionResult> UpdateProjectStatus(UpdateProjectStatusDto updateProjectStatus)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,7 +39,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpPut("UpdateProjectDetails")]
+        [HttpPut("Details")]
         public async Task<IActionResult> UpdateProjectDetails(UpdateProjectDetailsDto updateProjectDetailsDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -49,7 +49,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("DeleteProject/{projectId}")]
+        [HttpDelete("{projectId}")]
         public async Task<IActionResult> DeleteProject(int projectId)
         {
             var result = await _projectService.DeleteProjectAsync(projectId);
