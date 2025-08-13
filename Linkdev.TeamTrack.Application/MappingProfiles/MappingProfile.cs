@@ -31,14 +31,17 @@ namespace Linkdev.TeamTrack.Application.MappingProfiles
         {
             CreateMap<CreateTaskDto, ProjectTask>();
             CreateMap<ProjectTask, TaskDto>()
-                .ForMember(dto => dto.ProjectName , option => option.MapFrom(src => src.Project.Name))
+                .ForMember(dto => dto.ProjectName, option => option.MapFrom(src => src.Project.Name))
                 .ForMember(dto => dto.AssignedUserName, option => option.MapFrom(src => src.AssignedUser.UserName));
             CreateMap<UpdateTaskDetailsDto, ProjectTask>();
             CreateMap<ProjectTask, ReturnedTaskUpdateDto>()
-                .ForMember(dto => dto.ProjectName , option => option.MapFrom(src => src.Project.Name));
+                .ForMember(dto => dto.ProjectName, option => option.MapFrom(src => src.Project.Name));
             CreateMap<SetTeamMemberDto, ProjectTask>();
             CreateMap<ProjectTask, ReturnedTeamMemberUpdateDto>()
-                .ForMember(dto => dto.UserName , option => option.MapFrom(src => src.AssignedUser.UserName));
+                .ForMember(dto => dto.UserName, option => option.MapFrom(src => src.AssignedUser.UserName));
+            CreateMap<UpdateTaskCompletePercentDto, ProjectTask>();
+            CreateMap<ProjectTask, TaskCompletePercentDto>()
+                .ForMember(dto => dto.ProjectStatus, option => option.MapFrom(src => src.Project.ProjectStatus));
         }
     }
 }

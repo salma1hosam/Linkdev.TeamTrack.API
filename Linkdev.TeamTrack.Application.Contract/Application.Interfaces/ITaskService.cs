@@ -10,5 +10,6 @@ namespace Linkdev.TeamTrack.Contract.Application.Interfaces
         Task<string> DeleteTaskAsync(string userId, int taskId);
         Task<ReturnedTeamMemberUpdateDto> AssignTeamMemberOnTaskAsync(string userId, SetTeamMemberDto setTeamMemberDto);
         Task<PaginatedResponse<GetAllTasksDto>> ViewAllTasksAsync(string userId, int projectId, TaskFilterParams taskQueryParams);
+        Task<TaskCompletePercentDto> UpdateTaskCompletePercentAsync(string userId, UpdateTaskCompletePercentDto updateTaskCompletePercentDto);
     }
 }

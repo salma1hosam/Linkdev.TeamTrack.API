@@ -187,5 +187,40 @@ namespace Linkdev.TeamTrack.Application.Services
             return paginatedResponse;
         }
 
+        public async Task<TaskCompletePercentDto> UpdateTaskCompletePercentAsync(string userId, UpdateTaskCompletePercentDto updateTaskCompletePercentDto)
+        {
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
+            if (updateTaskCompletePercentDto is null) throw new BadRequestException("Invalid Data");
+
+            var task = await _unitOfWork.TaskRepository.Find(T => T.Id == updateTaskCompletePercentDto.Id
+                                                             && T.IsActive == true
+                                                             && T.AssignedUserId.Equals(userId)
+                                                             , nameof(ProjectTask.Project))
+                                                       .FirstOrDefaultAsync() ?? throw new NotFoundException("Task is Not Found");
+
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == task.ProjectId && P.IsActive == true
+                                                                   , nameof(Project.Tasks))
+                                                             .FirstOrDefaultAsync()
+                                                             ?? throw new NotFoundException("Project is Not Found");
+
+            if (project.ProjectStatus == ProjectStatus.Suspended)
+                throw new ForbiddenException("Cannot update the task % complete because the project is suspended");
+
+            _mapper.Map(updateTaskCompletePercentDto, task);
+            task.LastUpdatedDate = DateTime.Now;
+            _unitOfWork.TaskRepository.Update(task);
+
+            if (project.Tasks.Where(T => T.IsActive == true).All(T => T.CompletedTaskPercent == 100))
+                project.ProjectStatus = ProjectStatus.Completed;
+            else
+                project.ProjectStatus = ProjectStatus.InProgress;
+
+            _unitOfWork.ProjectRepository.Update(project);
+
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to update the task % complete or the project status");
+
+            return _mapper.Map<ProjectTask, TaskCompletePercentDto>(task);
+        }
     }
 }

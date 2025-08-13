@@ -55,5 +55,14 @@ namespace Linkdev.TeamTrack.API.Controllers
             var result = await _taskService.ViewAllTasksAsync(userId, projectId, taskFilterParams);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Team Member")]
+        [HttpPut("UpdateTaskCompletePercent")]
+        public async Task<IActionResult> UpdateTaskCompletePercent(UpdateTaskCompletePercentDto updateTaskCompletePercentDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _taskService.UpdateTaskCompletePercentAsync(userId, updateTaskCompletePercentDto);
+            return Ok(result);
+        }
     }
 }
