@@ -1,10 +1,7 @@
 ﻿using Linkdev.TeamTrack.Contract.DTOs.UserDtos;
-using Linkdev.TeamTrack.Core.Responses;
 using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Linkdev.TeamTrack.API.Controllers
 {
@@ -13,29 +10,29 @@ namespace Linkdev.TeamTrack.API.Controllers
     public class UserController(IUserService _userService) : ControllerBase
     {
         [HttpPost("Register")]
-        public async Task<ActionResult<GenericResponse<UserDto>>> Register(RegisterDto registerDto)
+        public async Task<IActionResult> Register(RegisterDto registerDto)
         {
             var result = await _userService.RegisterAsync(registerDto);
             return Ok(result);
         }
 
         [HttpPost("Login")]
-        public async Task<ActionResult<GenericResponse<UserDto>>> Login(LoginDto loginDto)
+        public async Task<IActionResult> Login(LoginDto loginDto)
         {
             var result = await _userService.LoginAsync(loginDto);
             return Ok(result);
         }
 
         [HttpPost("LogOut")]
-        public async Task<ActionResult<GenericResponse<bool>>> LogOut()
+        public async Task<IActionResult> LogOut()
         {
-            await _userService.LogOutAsync();
-            return Ok();
+            var result = await _userService.LogOutAsync();
+            return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPost("AssignUserRole")]
-        public async Task<ActionResult<GenericResponse<UserRoleDto>>> AssignUserRole(SetUserRoleDto setUserRoleDto)
+        public async Task<IActionResult> AssignUserRole(SetUserRoleDto setUserRoleDto)
         {
             var result = await _userService.AssignUserRoleAsync(setUserRoleDto);
             return Ok(result);
@@ -43,15 +40,15 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("UpdateUserRole")]
-        public async Task<ActionResult<GenericResponse<UserRoleDto>>> UpdateUserRole(SetUserRoleDto setUserRoleDto)
+        public async Task<IActionResult> UpdateUserRole(SetUserRoleDto setUserRoleDto)
         {
             var result = await _userService.UpdateUserRoleAsync(setUserRoleDto);
             return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("GetAllUsers")]
-        public async Task<ActionResult<GenericResponse<PaginatedResponse<GetAllUsersDto>>>> GetAllUsers([FromQuery] UserQueryParams userQueryParams)
+        [HttpPost("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers(UserFilterParams userQueryParams)
         {
             var result = await _userService.GetAllUsersAsync(userQueryParams);
             return Ok(result);
@@ -59,7 +56,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet("GetAllProjectManagers")]
-        public async Task<ActionResult<GenericResponse<IEnumerable<GetAllUsersInRoleDto>>>> GetAllProjectManagers()
+        public async Task<IActionResult> GetAllProjectManagers()
         {
             var result = await _userService.GetAllProjectManagersAsync();
             return Ok(result);
@@ -67,7 +64,7 @@ namespace Linkdev.TeamTrack.API.Controllers
 
         [Authorize(Roles = "Admin,Project Manager")]
         [HttpGet("GetAllTeamMembers")]
-        public async Task<ActionResult<GenericResponse<IEnumerable<GetAllUsersDto>>>> GetAllTeamMembers()
+        public async Task<IActionResult> GetAllTeamMembers()
         {
             var result = await _userService.GetAllTeamMembersAsync();
             return Ok(result);
