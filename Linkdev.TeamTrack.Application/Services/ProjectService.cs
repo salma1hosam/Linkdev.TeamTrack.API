@@ -116,29 +116,35 @@ namespace Linkdev.TeamTrack.Application.Services
             return _mapper.Map<Project, ProjectStatusDto>(project);
         }
 
-        public async Task<PaginatedResponse<GetAllProjectsDto>> ViewAllProjectsAsync(string userId, ProjectQueryParams projectQueryParams)
+        public async Task<PaginatedResponse<GetAllProjectsDto>> ViewAllProjectsAsync(string userId, ProjectFilterParams projectFilterParams)
         {
             if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
             var allprojectsPaginated = await _unitOfWork.ProjectRepository
                                       .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
-                                                          && P.IsActive == true
-                                                          && (projectQueryParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectQueryParams.Name.ToLower()))
-                                                          && (!projectQueryParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectQueryParams.ProjectStatus.Value)
-                                                 , new Paging(projectQueryParams.PageSize, projectQueryParams.PageNumber)
+                                                 && P.IsActive == true
+                                                 && (projectFilterParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectFilterParams.Name.ToLower()))
+                                                 && (!projectFilterParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectFilterParams.ProjectStatus.Value)
+                                                 , new Paging(projectFilterParams.PageSize, projectFilterParams.PageNumber)
                                                  , P => P.CreatedDate
                                                  , "desc"
                                                  , nameof(Project.ProjectManager), nameof(Project.Tasks)
                                                  );
 
-            //if (allprojectsPaginated.Data?.Any() == false)
-            //{
-            //    genericResponse.StatusCode = StatusCodes.Status200OK;
-            //    genericResponse.Message = "There is no data to be displayed";
-            //    return genericResponse;
-            //}
+            var paginatedResonse = new PaginatedResponse<GetAllProjectsDto>()
+            {
+                TotalCount = allprojectsPaginated.TotalCount,
+                PageNumber = allprojectsPaginated.PageNumber,
+                PageSize = allprojectsPaginated.PageSize,
+            };
 
-            var mappedProjects = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
+            if (allprojectsPaginated.Data?.Any() == false)
+            {
+                paginatedResonse.Message = "There is no data to be displayed";
+                return paginatedResonse;
+            }
+
+            paginatedResonse.Data = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
             {
                 Name = P.Name,
                 CreatedDate = P.CreatedDate,
@@ -146,40 +152,36 @@ namespace Linkdev.TeamTrack.Application.Services
                 ProjectStatus = P.ProjectStatus.ToString()
             }).ToList();
 
-            return new PaginatedResponse<GetAllProjectsDto>()
-            {
-                TotalCount = allprojectsPaginated.TotalCount,
-                PageNumber = allprojectsPaginated.PageNumber,
-                PageSize = allprojectsPaginated.PageSize,
-                Data = mappedProjects
-            };
+            return paginatedResonse;
         }
 
-        public async Task<bool> DeleteProjectAsync(int projectId)
+        public async Task<string> DeleteProjectAsync(int projectId)
         {
             var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == projectId && P.IsActive == true
                                                                    , nameof(Project.Tasks), nameof(Project.ProjectManager))
                                                              .FirstOrDefaultAsync() ?? throw new NotFoundException("Project is Not Found");
 
             project.IsActive = false;
+            project.LastUpdatedDate = DateTime.Now;
             _unitOfWork.ProjectRepository.Update(project);
-            var rows = await _unitOfWork.SaveChangesAsync();
-            if (rows < 1) throw new Exception("Failed to Delete the project");
 
             if (project.Tasks?.Any() == true)
             {
                 foreach (var task in project.Tasks)
+                {
                     task.IsActive = false;
+                    task.LastUpdatedDate = DateTime.Now;
+                }
                 _unitOfWork.TaskRepository.UpdateList(project.Tasks);
-                var rowsNumber = await _unitOfWork.SaveChangesAsync();
-                if (rowsNumber < 1) throw new Exception("Failed to delete the Project related Tasks ");
             }
+            var rows = await _unitOfWork.SaveChangesAsync();
+            if (rows < 1) throw new Exception("Failed to delete the Project or its related Tasks ");
 
             await _emailService.SendEmailAsync(toEmails: [project.ProjectManager.Email],
                                                subject: "Project Deleted",
                                                messageBody: $"{project.Name} Project has been deleted");
 
-            return true;
+            return "Project Deleted Successfully";
         }
     }
 }

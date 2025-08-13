@@ -127,8 +127,11 @@ namespace Linkdev.TeamTrack.Application.Services
             if (task.AssignedUserId == setTeamMemberDto.AssignedUserId)
                 throw new BadRequestException("This Team Member is already assigned to this task");
 
-            var teamMember = await _userManager.FindByIdAsync(setTeamMemberDto.AssignedUserId)
+            var assignedUser = await _userManager.FindByIdAsync(setTeamMemberDto.AssignedUserId)
                 ?? throw new NotFoundException("Assigned Team Member is Not Found");
+
+            var assignedUserRole = _userManager.GetRolesAsync(assignedUser).Result.FirstOrDefault() 
+                ?? throw new BadRequestException("This User has No Role");
 
             _mapper.Map(setTeamMemberDto, task);
             task.LastUpdatedDate = DateTime.Now;
