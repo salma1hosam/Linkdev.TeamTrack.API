@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Linkdev.TeamTrack.Infrastructure.EmailService;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Linkdev.TeamTrack.API
 {
@@ -26,7 +28,32 @@ namespace Linkdev.TeamTrack.API
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    In = ParameterLocation.Header,
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    Description = "Enter 'Bearer' Followed By Space And Your Token"
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Id = "Bearer",
+                                Type = ReferenceType.SecurityScheme
+                            }
+                        },
+                        new List<string>()  //Scope
+					}
+                });
+            });
 
             //DbContext Registeration
             builder.Services.AddDbContext<TeamTrackDbContext>(option =>
@@ -58,13 +85,13 @@ namespace Linkdev.TeamTrack.API
             });
 
             builder.Services.AddScoped<IDataSeeding, DataSeeding>();
-            builder.Services.AddScoped<IUserService , UserService>();
-            builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
-            builder.Services.AddScoped<IProjectService , ProjectService>();
+            builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.Configure<SmtpConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
-            builder.Services.AddScoped<IEmailService , EmailService>();
-            builder.Services.AddScoped<ITaskService , TaskService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<ITaskService, TaskService>();
             #endregion
 
             var app = builder.Build();
@@ -81,8 +108,19 @@ namespace Linkdev.TeamTrack.API
 
             //if (app.Environment.IsDevelopment())
             //{
-                app.UseSwagger();
-                app.UseSwaggerUI();
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.ConfigObject = new ConfigObject()
+                {
+                    DisplayRequestDuration = true
+                };
+
+                options.DocExpansion(DocExpansion.None);
+
+                //The UI Of Authorization
+                options.EnablePersistAuthorization();
+            });
             //}
 
             app.UseHttpsRedirection();
