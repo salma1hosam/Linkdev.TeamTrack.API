@@ -2,6 +2,7 @@
 using Linkdev.TeamTrack.Contract.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Linkdev.TeamTrack.API.Controllers
 {
@@ -31,7 +32,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("AssignUserRole")]
+        [HttpPost("AssignToRole")]
         public async Task<IActionResult> AssignUserRole(SetUserRoleDto setUserRoleDto)
         {
             var result = await _userService.AssignUserRoleAsync(setUserRoleDto);
@@ -39,7 +40,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("UpdateUserRole")]
+        [HttpPut("Role")]
         public async Task<IActionResult> UpdateUserRole(SetUserRoleDto setUserRoleDto)
         {
             var result = await _userService.UpdateUserRoleAsync(setUserRoleDto);
@@ -47,26 +48,19 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("GetAllUsers")]
-        public async Task<IActionResult> GetAllUsers(UserFilterParams userQueryParams)
+        [HttpPost("ViewAllUsers")]
+        public async Task<IActionResult> ViewAllUsers(UserFilterParams userQueryParams)
         {
             var result = await _userService.GetAllUsersAsync(userQueryParams);
             return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("GetAllProjectManagers")]
-        public async Task<IActionResult> GetAllProjectManagers()
-        {
-            var result = await _userService.GetAllProjectManagersAsync();
-            return Ok(result);
-        }
-
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpGet("GetAllTeamMembers")]
-        public async Task<IActionResult> GetAllTeamMembers()
+        [HttpGet("AllUsersInRole")]
+        public async Task<IActionResult> GetAllUserInRole(string role)
         {
-            var result = await _userService.GetAllTeamMembersAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _userService.GetAllUserInRoleAsync(userId, role);
             return Ok(result);
         }
     }

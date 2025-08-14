@@ -177,25 +177,31 @@ namespace Linkdev.TeamTrack.Application.Services
             return paginatedResponse;
         }
 
-        public async Task<IEnumerable<GetAllUsersInRoleDto>> GetAllProjectManagersAsync()
+        public async Task<IEnumerable<GetAllUsersInRoleDto>> GetAllUserInRoleAsync(string userId, string role)
         {
-            var projectManagerUsers = await _userManager.GetUsersInRoleAsync("Project Manager");
+            if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
-            return projectManagerUsers.Select(U => new GetAllUsersInRoleDto
+            if (role.IsNullOrEmpty()) throw new BadRequestException("Invalid Role");
+            if (!await _roleManager.RoleExistsAsync(role)) throw new NotFoundException("Role does Not Exist");
+
+            List<TeamTrackUser> users = [];
+            if (role.ToLower().Contains("project manager"))
             {
-                Id = U.Id,
-                UserName = U.UserName
-            });
-        }
+                var currentUser = await _userManager.FindByIdAsync(userId);
+                var currentUserRole = _userManager.GetRolesAsync(currentUser).Result.FirstOrDefault();
+                if (currentUserRole.Contains("Project Manager"))
+                    throw new ForbiddenException("You're Not authorized to view all users in project manager role");
+                else
+                    users.AddRange(await _userManager.GetUsersInRoleAsync("Project Manager"));
+            }
 
-        public async Task<IEnumerable<GetAllUsersInRoleDto>> GetAllTeamMembersAsync()
-        {
-            var teamMemberUsers = await _userManager.GetUsersInRoleAsync("Team Member");
+            if (role.ToLower().Contains("team member"))
+                users.AddRange(await _userManager.GetUsersInRoleAsync("Team Member"));
 
-            return teamMemberUsers.Select(U => new GetAllUsersInRoleDto()
+            return users.Select(user => new GetAllUsersInRoleDto
             {
-                Id = U.Id,
-                UserName = U.UserName
+                Id = user.Id,
+                UserName = user.UserName
             });
         }
 

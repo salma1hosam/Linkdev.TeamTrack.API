@@ -12,7 +12,7 @@ namespace Linkdev.TeamTrack.API.Controllers
     public class TaskController(ITaskService _taskService) : ControllerBase
     {
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpPost("AddTask")]
+        [HttpPost]
         public async Task<IActionResult> AddTask(CreateTaskDto createTaskDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -21,7 +21,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpPut("UpdateTaskDetails")]
+        [HttpPut("Details")]
         public async Task<IActionResult> UpdateTaskDetails(UpdateTaskDetailsDto updateTaskDetailsDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -30,7 +30,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpPut("DeleteTask/{taskId}")]
+        [HttpDelete("{taskId}")]
         public async Task<IActionResult> DeleteTask(int taskId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,7 +39,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Project Manager")]
-        [HttpPut("AssignTeamMemberOnTask")]
+        [HttpPut("AssignTeamMemberToTask")]
         public async Task<IActionResult> AssignTeamMemberOnTask(SetTeamMemberDto setTeamMemberDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -57,7 +57,7 @@ namespace Linkdev.TeamTrack.API.Controllers
         }
 
         [Authorize(Roles = "Team Member")]
-        [HttpPut("UpdateTaskCompletePercent")]
+        [HttpPut("TaskCompletePercent")]
         public async Task<IActionResult> UpdateTaskCompletePercent(UpdateTaskCompletePercentDto updateTaskCompletePercentDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
