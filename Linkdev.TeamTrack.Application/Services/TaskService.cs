@@ -147,7 +147,8 @@ namespace Linkdev.TeamTrack.Application.Services
         {
             if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid UserId");
 
-            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == projectId && P.IsActive == true)
+            var project = await _unitOfWork.ProjectRepository.Find(P => P.Id == projectId && P.IsActive == true
+                                                                   ,nameof(Project.Tasks))
                                                              .FirstOrDefaultAsync()
                                                              ?? throw new NotFoundException("Project is Not Found");
 
