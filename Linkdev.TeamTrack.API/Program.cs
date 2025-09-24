@@ -15,6 +15,9 @@ using System.Text;
 using Linkdev.TeamTrack.Infrastructure.EmailService;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using Linkdev.TeamTrack.Infrastructure.ElasticSearch;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 
 namespace Linkdev.TeamTrack.API
 {
@@ -92,6 +95,16 @@ namespace Linkdev.TeamTrack.API
             builder.Services.Configure<SmtpConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ITaskService, TaskService>();
+
+            //Elastic Search Registeration
+            var elasticSearchConfig = builder.Configuration.GetSection("ElasticSetting").Get<ElasticSearchConfiguration>()
+                ?? throw new Exception("Elasticsearch configuration is missing or invalid.");
+            var connectionString = new ElasticsearchClientSettings(new Uri(elasticSearchConfig.Url))
+                .Authentication(new BasicAuthentication(elasticSearchConfig.Username, elasticSearchConfig.Password))
+                .DefaultIndex(elasticSearchConfig.DefaultIndex);
+            builder.Services.AddSingleton(new ElasticsearchClient(connectionString));
+
+            builder.Services.AddScoped<IProjectElasticService, ProjectElasticService>();
             #endregion
 
             var app = builder.Build();

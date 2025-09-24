@@ -4,7 +4,7 @@
     {
         public string Name { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string ProjectManagerName { get; set; }
+        public string ProjectManagerId { get; set; }
         public string ProjectStatus { get; set; }
     }
 }

@@ -15,7 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Linkdev.TeamTrack.Application.Services
 {
     public class ProjectService(IUnitOfWork _unitOfWork, IMapper _mapper, UserManager<TeamTrackUser> _userManager , 
-                                IEmailService _emailService) : IProjectService
+                                IEmailService _emailService, IProjectElasticService _projectElasticService) : IProjectService
     {
         public async Task<ProjectDto> AddProjectAsync(CreateProjectDto createProjectDto)
         {
@@ -32,6 +32,8 @@ namespace Linkdev.TeamTrack.Application.Services
             await _unitOfWork.ProjectRepository.AddAsync(project);
             var rows = await _unitOfWork.SaveChangesAsync();
             if (rows < 1) throw new Exception("Failed to Create the Project");
+
+            await _projectElasticService.IndexProjectAsync(project);
 
             return _mapper.Map<Project, ProjectDto>(project);
         }
@@ -120,40 +122,53 @@ namespace Linkdev.TeamTrack.Application.Services
         {
             if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
 
-            var allprojectsPaginated = await _unitOfWork.ProjectRepository
-                                      .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
-                                                 && P.IsActive == true
-                                                 && (projectFilterParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectFilterParams.Name.ToLower()))
-                                                 && (!projectFilterParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectFilterParams.ProjectStatus.Value)
-                                                 , new Paging(projectFilterParams.PageSize, projectFilterParams.PageNumber)
-                                                 , P => P.CreatedDate
-                                                 , "desc"
-                                                 , nameof(Project.ProjectManager), nameof(Project.Tasks)
-                                                 );
-
-            var paginatedResonse = new PaginatedResponse<GetAllProjectsDto>()
+            var allProjects = await _projectElasticService.SearchProjectAsync(projectFilterParams, userId);
+            
+            if (allProjects.Data?.Any() == false)
             {
-                TotalCount = allprojectsPaginated.TotalCount,
-                PageNumber = allprojectsPaginated.PageNumber,
-                PageSize = allprojectsPaginated.PageSize,
-            };
-
-            if (allprojectsPaginated.Data?.Any() == false)
-            {
-                paginatedResonse.Message = "There is no data to be displayed";
-                return paginatedResonse;
+                allProjects.Message = "There is no data to be displayed";
+                return allProjects;
             }
-
-            paginatedResonse.Data = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
-            {
-                Name = P.Name,
-                CreatedDate = P.CreatedDate,
-                ProjectManagerName = P.ProjectManager.UserName,
-                ProjectStatus = P.ProjectStatus.ToString()
-            }).ToList();
-
-            return paginatedResonse;
+            return allProjects;
         }
+        //public async Task<PaginatedResponse<GetAllProjectsDto>> ViewAllProjectsAsync(string userId, ProjectFilterParams projectFilterParams)
+        //{
+        //    if (userId.IsNullOrEmpty()) throw new UnauthorizedException("Invalid User Id");
+
+        //    var allprojectsPaginated = await _unitOfWork.ProjectRepository
+        //                              .FindAsync(P => (P.ProjectManagerId.Equals(userId) || P.Tasks.Any(T => T.AssignedUserId == userId))
+        //                                         && P.IsActive == true
+        //                                         && (projectFilterParams.Name.IsNullOrEmpty() || P.Name.ToLower().Contains(projectFilterParams.Name.ToLower()))
+        //                                         && (!projectFilterParams.ProjectStatus.HasValue || P.ProjectStatus == (ProjectStatus)projectFilterParams.ProjectStatus.Value)
+        //                                         , new Paging(projectFilterParams.PageSize, projectFilterParams.PageNumber)
+        //                                         , P => P.CreatedDate
+        //                                         , "desc"
+        //                                         , nameof(Project.ProjectManager), nameof(Project.Tasks)
+        //                                         );
+
+        //    var paginatedResonse = new PaginatedResponse<GetAllProjectsDto>()
+        //    {
+        //        TotalCount = allprojectsPaginated.TotalCount,
+        //        PageNumber = allprojectsPaginated.PageNumber,
+        //        PageSize = allprojectsPaginated.PageSize,
+        //    };
+
+        //    if (allprojectsPaginated.Data?.Any() == false)
+        //    {
+        //        paginatedResonse.Message = "There is no data to be displayed";
+        //        return paginatedResonse;
+        //    }
+
+        //    paginatedResonse.Data = allprojectsPaginated.Data.Select(P => new GetAllProjectsDto()
+        //    {
+        //        Name = P.Name,
+        //        CreatedDate = P.CreatedDate,
+        //        ProjectManagerName = P.ProjectManager.UserName,
+        //        ProjectStatus = P.ProjectStatus.ToString()
+        //    }).ToList();
+
+        //    return paginatedResonse;
+        //}
 
         public async Task<string> DeleteProjectAsync(int projectId)
         {
